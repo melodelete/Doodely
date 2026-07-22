@@ -1,0 +1,37 @@
+# Doodle Guesser 
+
+An drawing game where you sketch a word and model guesses what you're drawing
+
+## How It Works
+
+1. A **target word** appears
+2. You draw it on the canvas
+3. The AI model watches as you draw and shows its **top 3 guesses** with what is most likely
+4. You get **30 seconds** per round — score a point if one of the model's top 3 guesses matches the target word
+
+## Features
+
+- **AI classification** — the model runs every 400ms as you draw
+- **132 words** from DoodleNet's vocabulary, shuffled each session
+- **Brush size selector** — Small (2px), Medium (4px), Large (6px)
+- **Undo / Clear** — undo up to 25 strokes, or clear the canvas entirely
+- **Timer ring** — a circular progress indicator that changes color as time runs out
+- **Score & streak tracking** — your score and current streak 
+
+
+## Tech Stack
+
+| Layer | What It means|
+|---|---|
+| **AI model** | [DoodleNet](https://learn.ml5js.org/#/reference/doodle-net) via [ml5.js](https://ml5js.org/) 0.12.2 |
+| **Canvas** | HTML5 Canvas
+| **Fonts** | [Inter](https://fonts.google.com/specimen/Inter) via Google Fonts |
+| **Dependencies** |A webby webby browser
+
+## Word List
+
+The game uses a curated subset of **132 words** from DoodleNet's.
+
+## License
+
+MIT 
