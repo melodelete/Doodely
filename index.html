@@ -620,6 +620,61 @@
            .stat-label {font-size: 0.55rem;}
            .stat-value { font-size: 0.8rem;}
            .stat-value.target-word { font-size: 0.85rem;}
+        }
+        .difficulty-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 6px 8px;
+        }
+        .difficulty-bar .diff-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.35);
+            margin-right: 2px;
+        }
+        .diff-btn {
+            padding: 4px 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.45);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .diff-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.75);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .diff-btn:active {
+            transform: scale(0.95);
+        }
+        .diff-btn.active-easy {
+            background: rgba(0,255,136,0.1);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        .diff-btn.active-medium {
+            background: rgba(0,212,255,0.1);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        .diff-btn.active-hard {
+            background: rgba(255,107,157,0.1);
+            border-color: #ff6b9d;
+            color: #ff6b9d;
         }  
     </style>
 </head>
@@ -675,6 +730,12 @@
         <header>
             <h1><span>Doodle</span> Guesser</h1>
             <p class="subtitle">Draw it. The AI model guesses it</p>
+            <div class="difficulty-bar">
+                <span class="diff-label">Diff</span>
+                <button class="diff-btn" data-difficulty="easy" onclick="setDifficulty('easy')">Easy</button>
+                <button class="diff-btn active-medium" data-difficulty="medium" onclick="setDifficulty('medium')">Normal</button>
+                <button class="diff-btn" data-difficulty="hard" onclick="setDifficulty('hard')">Hard</button>
+            </div>
         </header>
         <div class="game-info-bar">
             <div class="stat-card timer-card">
@@ -782,11 +843,18 @@
       'windmill', 'wine glass', 'zebra'
     ];
 
-    const state = { 
-        gameState: 'loading', 
+    const DIFFICULTIES = {
+      easy:   { label: 'Easy',   timer: 45, minConfidence: 0.10, scoreMultiplier: 1 },
+      medium: { label: 'Normal', timer: 30, minConfidence: 0.15, scoreMultiplier: 2 },
+      hard:   { label: 'Hard',   timer: 20, minConfidence: 0.25, scoreMultiplier: 3 },
+    };
+
+    const state = {
+        gameState: 'loading',
         score: 0,
         streak: 0,
         timeLeft: TIMER_DURATION,
+        difficulty: 'medium',
         targetWord: '',
         brushSize: 2,
         isdrawing: false,
@@ -952,7 +1020,7 @@
             
             const toplabel = results[0].label.toLowerCase().trim();
             const target = state.targetWord.toLowerCase().trim();
-            if (state.gameState === 'playing' && toplabel === target && results[0].confidence >= MIN_CONFIDENCE) {
+            if (state.gameState === 'playing' && toplabel === target && results[0].confidence >= DIFFICULTIES[state.difficulty].minConfidence) {
                 handleCorrectGuess();
             }
         });
@@ -1010,7 +1078,7 @@
             state.wordindex = 0;
         }
         state.targetWord = state.shuffledwords[state.wordindex++];
-        state.timeLeft = TIMER_DURATION;
+        state.timeLeft = DIFFICULTIES[state.difficulty].timer;
         state.hasdrawn = false;
         state.lastclassified = [];
         state.gameState = 'playing';
@@ -1061,7 +1129,7 @@
         state.gameState = 'celebrating';
         stopGameTimer();
         stopClassification();
-        state.score += 1;
+        state.score += DIFFICULTIES[state.difficulty].scoreMultiplier;
         state.streak += 1;
         updateScoreUI();
         showMessage(correctoverlay);
@@ -1090,7 +1158,8 @@
 
     function updateTimerUI() {
         const timeLeft = Math.max(0, state.timeLeft);
-        const progress = timeLeft / TIMER_DURATION;
+        const diff = DIFFICULTIES[state.difficulty];
+        const progress = timeLeft / diff.timer;
         const offset = CIRCUMFERENCE * (1 - progress);
         timerring.style.strokeDashoffset = offset;
         timetext.textContent = Math.ceil(timeLeft);
@@ -1184,6 +1253,16 @@
         localStorage.setItem('hasSeenHowToPlay', 'true');
     }
 
+    function setDifficulty(diff) {
+        if (state.gameState === 'playing') return;
+        if (!DIFFICULTIES[diff]) return;
+        state.difficulty = diff;
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.className = 'diff-btn';
+        });
+        document.querySelector(`.diff-btn[data-difficulty="${diff}"]`).classList.add('active-' + diff);
+    }
+
     document.querySelectorAll('.brush-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (state.gameState === 'celebrating' || state.gameState === 'timeout') return;
@@ -1209,6 +1288,7 @@
 
     initCanvas();
     window.dismissHowToPlay = dismissHowToPlay;
+    window.setDifficulty = setDifficulty;
     console.log('Doodle Guesser initialized. Waiting for model to load...');
 </script>
 </body>

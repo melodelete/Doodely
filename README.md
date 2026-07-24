@@ -17,7 +17,7 @@ An drawing game where you sketch a word and model guesses what you're drawing
 - **Undo / Clear** — undo up to 25 strokes, or clear the canvas entirely
 - **Timer ring** — a circular progress indicator that changes color as time runs out
 - **Score & streak tracking** — your score and current streak 
-
+- **Difficulty** - There are 3 modes,Easy,Normal, and Hard, Each one decreases the timer and must make the doodle look better
 
 ## Tech Stack
 
