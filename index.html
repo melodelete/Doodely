@@ -781,14 +781,8 @@
         <div class="toolbar">
             <div class="brush-group">
                 <span class="group-label">Brush</span>
-                <button class="brush-btn active" data-size="2" title="Small (2px)">
-                    <span class="dot" style="width:4px;height:4px;"></span>
-                </button>
-                <button class="brush-btn" data-size="4" title="Medium (4px)">
-                    <span class="dot" style="width:8px;height:8px;"></span>
-                </button>
-                <button class="brush-btn" data-size="6" title="Large (6px)">
-                    <span class="dot" style="width:12px;height:12px;"></span>
+                <button class="brush-btn" data-size="22" title="Large (22px)">
+                    <span class="dot" style="width:22px;height:22px;"></span>
                 </button>
             </div>
             <div class="tool-divider"></div>
@@ -856,7 +850,7 @@
         timeLeft: TIMER_DURATION,
         difficulty: 'medium',
         targetWord: '',
-        brushSize: 2,
+        brushSize: 22,
         isdrawing: false,
         lastX: 0,
         lastY: 0,
@@ -1008,23 +1002,42 @@
             updateGuessesPlaceholder();
             return;
         }
+        offscreenctx.imageSmoothingEnabled = false;
         offscreenctx.fillStyle = '#ffffff';
         offscreenctx.fillRect(0, 0, 28, 28);
         offscreenctx.drawImage(canvas, 0, 0, 28, 28);
-        
+    
         state.classifier.classify(offscreencanvas, (err, results) => {
             if (err || !results || results.length === 0) return;
-            
-            state.lastclassified = results;
-            renderGuesses(results);
-            
-            const toplabel = results[0].label.toLowerCase().trim();
-            const target = state.targetWord.toLowerCase().trim();
-            if (state.gameState === 'playing' && toplabel === target && results[0].confidence >= DIFFICULTIES[state.difficulty].minConfidence) {
-                handleCorrectGuess();
-            }
+        
+            // 1. Define troublesome false-positive classes
+            const noiseClasses = ['rain', 'stitches', 'line', 'diagram', 'fence'];
+            const currentTarget = state.targetWord.toLowerCase().trim();
+
+            // 2. Filter out noise labels UNLESS the current target is actually one of those labels
+            const filteredResults = results.filter(item => {
+                const label = item.label.toLowerCase().trim();
+                if (label === currentTarget) return true; // Always keep the target word
+                return !noiseClasses.includes(label);     // Filter out false-positive noise
         });
-    }
+
+        // 3. Fallback to raw results if filtering emptied the array completely
+            const finalResults = filteredResults.length > 0 ? filteredResults : results;
+        
+            state.lastclassified = finalResults;
+            renderGuesses(finalResults);
+        
+        // 4. Check if the top guess matches the target word
+            const toplabel = finalResults[0].label.toLowerCase().trim();
+            if (
+                state.gameState === 'playing' && 
+                toplabel === currentTarget && 
+                finalResults[0].confidence >= DIFFICULTIES[state.difficulty].minConfidence
+        ) {
+                handleCorrectGuess();
+        }
+    });
+}
 
     function updateGuessesPlaceholder() {
         guesseslist.innerHTML = `

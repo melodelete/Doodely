@@ -17,7 +17,6 @@ An drawing game where you sketch a word and model guesses what you're drawing
 
 - **AI classification** — the model runs every 400ms as you draw
 - **132 words** from DoodleNet's vocabulary, shuffled each session
-- **Brush size selector** — Small (2px), Medium (4px), Large (6px)
 - **Undo / Clear** — undo up to 25 strokes, or clear the canvas entirely
 - **Timer ring** — a circular progress indicator that changes color as time runs out
 - **Score & streak tracking** — your score and current streak 
