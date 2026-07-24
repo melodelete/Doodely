@@ -1,6 +1,10 @@
-# Doodle Guesser 
+# Doodley
 
 An drawing game where you sketch a word and model guesses what you're drawing
+
+## Play
+[Click here to play](https://melodelete.github.io/Doodely/)
+
 
 ## How It Works
 
@@ -28,7 +32,7 @@ An drawing game where you sketch a word and model guesses what you're drawing
 | **Fonts** | [Inter](https://fonts.google.com/specimen/Inter) via Google Fonts |
 | **Dependencies** |A webby webby browser
 
-## Word List
+## Word List / Credits
 
 The game uses a curated subset of **132 words** from DoodleNet's.
 
