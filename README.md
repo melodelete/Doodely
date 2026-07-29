@@ -21,6 +21,7 @@ An drawing game where you sketch a word and model guesses what you're drawing
 - **Timer ring** — a circular progress indicator that changes color as time runs out
 - **Score & streak tracking** — your score and current streak 
 - **Difficulty** - There are 3 modes,Easy,Normal, and Hard, Each one decreases the timer and must make the doodle look better (Can only be changed during celebration or Timeout)
+- **Skipping** You can Skip words incase it is too difficult or The AI Cant Guess it
 
 ## Tech Stack
 

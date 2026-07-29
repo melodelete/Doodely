@@ -481,6 +481,7 @@
         }
         .action-btn.undo-btn { background: #FFD166; }
         .action-btn.clear-btn { background: #FF6B6B; color: #FFFFFF; }
+        .action-btn.skip-btn { background: #6C757D; color: #FFFFFF; }
 
         footer {
             display: flex;
@@ -619,6 +620,7 @@
             <div class="action-group">
                 <button class="action-btn undo-btn" id="undoBtn">Undo</button>
                 <button class="action-btn clear-btn" id="clearBtn">Clear</button>
+                <button class="action-btn skip-btn" id="skipBtn">Skip</button>
             </div>
         </div>
 
@@ -713,6 +715,7 @@
     const guesseslist = document.getElementById('guessesList');
     const undobtn = document.getElementById('undoBtn');
     const clearbtn = document.getElementById('clearBtn');
+    const skipbtn = document.getElementById('skipBtn');
     const howtoplaybtn = document.getElementById('howtoplayBtn');
     const dismissHowToPlayBtn = document.getElementById('dismissHowToPlayBtn');
 
@@ -990,6 +993,18 @@
         }, TIMEOUT_DELAY);
     }
 
+    function skipWord() {
+        if (state.gameState !== 'playing') return;
+        // stop timers and classification immediately
+        stopGameTimer();
+        stopClassification();
+        // reset streak but keep score
+        state.streak = 0;
+        updateScoreUI();
+        // advance to next word
+        nextRound();
+    }
+
     function updateTimerUI() {
         const timeLeft = Math.max(0, state.timeLeft);
         const diff = DIFFICULTIES[state.difficulty];
@@ -1094,6 +1109,7 @@
 
     undobtn.addEventListener('click', undo);
     clearbtn.addEventListener('click', clearCanvas);
+    if (skipbtn) skipbtn.addEventListener('click', skipWord);
     howtoplaybtn.addEventListener('click', () => howtoplayoverlay.classList.add('active'));
     dismissHowToPlayBtn.addEventListener('click', () => {
         howtoplayoverlay.classList.remove('active');
