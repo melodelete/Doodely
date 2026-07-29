@@ -11,11 +11,11 @@
 
     <style>
         *, *::before, *::after { margin: 0 ; padding: 0; box-sizing: border-box;}
-        html,body {height: 100%; overflow: hidden}
+        html, body { height: 100%; overflow: hidden; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "sans-serif" ;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #0f0f2a 100%);
-            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "sans-serif";
+            background-color: #FAF5E4;
+            color: #2B2D42;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -24,159 +24,138 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 24px 24px;
-            pointer-events: none;
-            z-index: 0;
-        }
+
         #loadingoverlay {
             position: fixed;
             inset: 0;
-            background: #0a0a1a;
+            background: #FAF5E4;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
         #loadingoverlay.hidden {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
-        .loading-content {
-            text-align: center;
-        }
+        .loading-content { text-align: center; }
         .loading-content h1 {
-            font-size: 2.4rem;
+            font-size: 2.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #00d4ff, #ff6b9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 24px;
+            color: #FF6B6B;
+            margin-bottom: 20px;
         }
         .loader {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #00d4ff;
+            width: 44px;
+            height: 44px;
+            border: 4px solid #E8E2CE;
+            border-top-color: #129A7D;
             border-radius: 50%;
-            animation: spin 0.9s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin: 0 auto 16px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-content p {
-            color: rgba(255,255,255,0.6);
+            color: #6C757D;
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 600;
         }
         .loading-dots::after {
             content: '';
             animation: dots 1.75s steps(4, end) infinite;
         }
         @keyframes dots {
-            0% {content: ''; }
-            25% {content: '.';}
-            50% {content: '..';}
-            75% {content: '...';}
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
         }
+
         .model-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(43, 45, 66, 0.6);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 500;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         .model-overlay.active {
             opacity: 1;
             visibility: visible;
         }
         .model-card {
-            background: rgba(255,255,255,0.06);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter:blur(24px);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: #FFFFFF;
+            border: 3px solid #2B2D42;
             border-radius: 20px;
-            padding: 40px 36px;
+            padding: 32px 28px;
             max-width: 440px;
             width: 90%;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-            transform:translateY(20px) scale(0.96);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 6px 6px 0px #2B2D42;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
         }
-        .model-overlay.active .model-card {
-            transform: translateY(0) scale(1);
-        }
+        .model-overlay.active .model-card { transform: translateY(0); }
         .model-card h2 {
             font-size: 1.6rem;
             font-weight: 800;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             text-align: center; 
-        }
-        .model-card h2 span {
-            background: linear-gradient(135deg, #00d4ff, #ff6b9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #2B2D42;
         }
         .model-steps {
             list-style: none;
-            display:flex;
+            display: flex;
             flex-direction: column;
-            gap: 14px;
-            margin-bottom: 28px;
+            gap: 12px;
+            margin-bottom: 24px;
         }
         .model-steps li {
-            display:flex;
+            display: flex;
             align-items: flex-start;
             gap: 12px;
-            color: rgba(255,255,255,0.85);
+            color: #2B2D42;
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.4;
+            font-weight: 500;
         }
         .model-steps .step-icon {
             flex-shrink: 0;
             width: 32px;
             height: 32px;
-            background:rgba(255,255,255,0.08);
+            background: #FAF5E4;
+            border: 2px solid #2B2D42;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         .model-card .btn-primary {
             display: block;
             margin: 0 auto;
-            padding: 12px 40px;
-            background: linear-gradient(135deg, #00d4ff, #0090b3);
-            border: none;
+            padding: 12px 36px;
+            background: #129A7D;
+            border: 2px solid #2B2D42;
             border-radius: 12px;
-            color: #ffffff;
+            color: #FFFFFF;
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 3px 3px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
             font-family: inherit;
         }
-        .model-card .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,212,255,0.3);
-        }
         .model-card .btn-primary:active {
-            transform: translateY(0);
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #2B2D42;
         }
+
         .message-overlay {
             position: fixed;
             inset: 0;
@@ -187,119 +166,140 @@
             pointer-events: none;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         .message-overlay.active {
             opacity: 1;
             visibility: visible;
         }
         .message-overlay .msg-text {
-            font-size: 3rem;
+            font-size: 3.2rem;
             font-weight: 900;
-            text-shadow: 0 4px 32px rgba(0,0,0,0.5);
-            animation: msgpop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            text-shadow: 4px 4px 0px #2B2D42;
+            animation: msgpop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .message-overlay.correct .msg-text {
-            background: linear-gradient(135deg, #00ff88, #00d4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .message-overlay.timeout .msg-text {
-            color: #ff6b6b;
-        }
+        .message-overlay.correct .msg-text { color: #06D6A0; }
+        .message-overlay.timeout .msg-text { color: #FF6B6B; }
         @keyframes msgpop {
-            0% { transform: scale(0.5);opacity: 0;}
-            100% {transform: scale(1);opacity: 1;}
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
+
         #app {
             position: relative;
-            z-index:1;
+            z-index: 1;
             width: 100%;
-            max-width: 520px;
+            max-width: 500px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             max-height: 100vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
-        #app::-webkit-scrollbar {
-            display: none;
-        }
-        header {
-            text-align: center;
-            padding: 8px 0 4px;
-        }
+        #app::-webkit-scrollbar { display: none; }
+
+        header { text-align: center; padding: 4px 0; }
         header h1 {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 900;
+            color: #FF6B6B;
             letter-spacing: -0.5px;
         }
-        header h1 span {
-            background: linear-gradient(135deg, #00d4ff, #ff6b9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
         header .subtitle {
-            font-size: 0.78rem;
-            color: rgba(255,255,255,0.4);
-            font-weight: 500;
-            margin-top: 2px;
+            font-size: 0.8rem;
+            color: #6C757D;
+            font-weight: 600;
+            margin-top: 1px;
+            margin-bottom: 8px;
         }
+
+        .difficulty-bar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            padding: 4px 6px;
+            box-shadow: 2px 2px 0px #2B2D42;
+        }
+        .difficulty-bar .diff-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6C757D;
+            margin-right: 4px;
+            margin-left: 4px;
+        }
+        .diff-btn {
+            padding: 4px 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: #2B2D42;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .diff-btn.active-easy { background: #06D6A0; border-color: #2B2D42; color: #FFFFFF; }
+        .diff-btn.active-medium { background: #129A7D; border-color: #2B2D42; color: #FFFFFF; }
+        .diff-btn.active-hard { background: #FF6B6B; border-color: #2B2D42; color: #FFFFFF; }
+
         .game-info-bar {
             display: grid;
             grid-template-columns: 1fr 1.2fr 0.8fr 0.8fr;
-            gap: 8px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         .stat-card {
-            background: rgba(255,255,255,0.06);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.09);
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
             border-radius: 14px;
-            padding: 10px 8px;
+            overflow: hidden;
+            background-clip: padding-box;
+            clip-path: inset(0 round 14px);
+            -webkit-clip-path: inset(0 round 14px);
+            padding: 8px 6px;
             text-align: center;
-            min-height: 62px;
+            min-height: 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-shadow: 2px 2px 0px #2B2D42;
         }
         .stat-label {
             font-size: 0.65rem;
-            font-weight: 600;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.9px;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 3px;
+            letter-spacing: 0.8px;
+            color: #6C757D;
+            margin-bottom: 2px;
         }
-        .stat-value {
-            font-size: 1.05rem;
-            font-weight: 700;
-        }
-        .stat-card.timer-card {
-            position: relative;
-        }
+        .stat-value { font-size: 1.05rem; font-weight: 800; }
+        .stat-card.timer-card { position: relative; }
         .timer-ring-svg {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             position: absolute;
             top: 50%;
-            left:50%;
+            left: 50%;
             transform: translate(-50%, -50%);
         }
         .timer-ring-svg .bg {
             fill: none;
-            stroke: rgba(255,255,255,0.065);
-            stroke-width: 4;
+            stroke: #E8E2CE;
+            stroke-width: 5;
         }
         .timer-ring-svg .progress {
             fill: none;
-            stroke: #00d4ff;
-            stroke-width: 4;
+            stroke: #129A7D;
+            stroke-width: 5;
             stroke-linecap: round;
             stroke-dasharray: 282.75;
             stroke-dashoffset: 0;
@@ -307,46 +307,36 @@
             transform: rotate(-90deg);
             transform-origin: center;
         }
-        .timer-ring-svg .progress.warning {
-            stroke: #ffd93d;
-        }
-        .timer-ring-svg .progress.danger {
-            stroke: #ff6b6b;
-            animation: pulse 0.5s ease-in-out infinite alternate;
-        }
-        @keyframes pulse {
-            from { opacity: 0.6; }
-            to { opacity: 1; }
-        }
+        .timer-ring-svg .progress.warning { stroke: #FFD166; }
+        .timer-ring-svg .progress.danger { stroke: #FF6B6B; }
         .timer-text {
-            font-size: 1.2rem;
-            font-weight: 800;
+            font-size: 1.15rem;
+            font-weight: 900;
             position: relative;
             z-index: 1;
+            color: #2B2D42;
         }
         .stat-value.target-word {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #00d4ff;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #129A7D;
             text-transform: capitalize;
         }
-        .stat-value.score-value {
-            color: #00ff88;
-        }
-        .stat-value.streak-value {
-            color: #ff6b9d;
-        }
+        .stat-value.score-value { color: #06D6A0; }
+        .stat-value.streak-value { color: #FF6B6B; }
+
         .main-area {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 16px;
         }
         .canvas-container {
             position: relative;
-            background: #f5f0e8;
-            border-radius: 16px;
+            background: #FFFFFF;
+            border: 3px solid #2B2D42;
+            border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 3px 3px 0px #2B2D42;
             aspect-ratio: 1 / 1;
             width: 100%;
             cursor: crosshair;
@@ -355,12 +345,12 @@
         .canvas-container::after {
             content: '✏️ Draw here';
             position: absolute;
-            bottom: 12px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.7rem;
-            font-weight: 600;
-            color: rgba(0,0,0,0.2);
+            font-weight: 700;
+            color: #A0A5AA;
             letter-spacing: 0.5px;
             pointer-events: none;
             text-transform: uppercase;
@@ -371,57 +361,53 @@
             height: 100%;
             touch-action: none;
         }
+
         .guesses-panel {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
             border-radius: 14px;
-            padding: 14px 16px;
+            padding: 12px 14px;
+            box-shadow: 3px 3px 0px #2B2D42;
         }
         .guesses-panel .panel-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .guesses-panel .panel-header h3 {
-            font-size: 0.8rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            color: rgba(255,255,255,0.5);
+            color: #6C757D;
         }
         .guesses-panel .panel-header .status-dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #00ff88;
-            animation: breathe 1.5s ease-in-out infinite;
+            background: #06D6A0;
         }
-        @keyframes breathe {0%, 100% {opacity: 0.4;} 50% {opacity: 1;}}
         .guess-row {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 5px 0;
+            border-bottom: 1px solid #E8E2CE;
         }
-        .guess-row:last-child {border-bottom: none;}
+        .guess-row:last-child { border-bottom: none; }
         .guess-rank {
-            width: 20px;
+            width: 18px;
             font-size: 0.75rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.35);
-            flex-shrink: 0;
+            font-weight: 800;
+            color: #6C757D;
             text-align: center;
         }
         .guess-label {
-            width: 80px;
+            width: 85px;
             font-size: 0.85rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.85);
-            flex-shrink: 0;
+            font-weight: 700;
+            color: #2B2D42;
             text-transform: capitalize;
             white-space: nowrap;
             overflow: hidden;
@@ -429,159 +415,96 @@
         }
         .guess-bar-track {
             flex: 1;
-            height: 8px;
-            background: rgba(255,255,255,0.06);
+            height: 10px;
+            background: #FAF5E4;
+            border: 1px solid #2B2D42;
             border-radius: 10px;
             overflow: hidden;
-            min-width: 0;
         }
         .guess-bar-fill {
             height: 100%;
             border-radius: 10px;
-            transition: width 0.35s cubic-bezier(0.34, 1.56,0.64, 1);
+            transition: width 0.35s ease;
             width: 0%;
         }
-        .guess-bar-fill.rank-1 { background: linear-gradient(90deg, #00d4ff, #0090b3); }
-        .guess-bar-fill.rank-2 { background: linear-gradient(90deg, #ff6b9d, #d94a7a); }
-        .guess-bar-fill.rank-3 { background: linear-gradient(90deg, #a66cff, #7a44d4); }
+        .guess-bar-fill.rank-1 { background: #129A7D; }
+        .guess-bar-fill.rank-2 { background: #FF6B6B; }
+        .guess-bar-fill.rank-3 { background: #FFD166; }
         .guess-pct {
-            width: 44px;
+            width: 38px;
             font-size: 0.75rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.5);
+            font-weight: 800;
+            color: #2B2D42;
             text-align: right;
-            flex-shrink: 0;
             font-variant-numeric: tabular-nums;
         }
         .guess-placeholder {
             text-align: center;
-            padding: 18px 0;
-            color: rgba(255,255,255,0.25);
+            padding: 14px 0;
+            color: #A0A5AA;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
         }
-        .guess-placeholder .icon {
-            font-size: 1.4rem;
-            margin-bottom: 4px;
-        }
+
         .toolbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.08);
+            justify-content: flex-end;
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
             border-radius: 14px;
-            padding: 10px 14px;
-        }
-        .brush-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .brush-group .group-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color:rgba(255,255,255,0.35);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-right: 4px;
-        }
-        .brush-btn {
-            width: 34px;
-            height: 34px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            background: rgba(255,255,255,0.04);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: border-color 0.2s, background 0.2s, transform 0.15s;
-            position: relative;
-        }
-        .brush-btn .dot {
-            border-radius: 50%;
-            background: rgba(255,255,255,0.6);
-            pointer-events: none;
-        }
-        .brush-btn:hover {
-            border-color: rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.08);
-        }
-        .brush-btn.active {
-            border-color: #00d4ff;
-            background: rgba(0,212,255,0.12);
-            transform: scale(1.1);
-        }
-        .brush-btn.active .dot {
-            background: #00d4ff;
-        }
-        .tool-divider {
-            width: 1px;
-            height: 28px;
-            background:rgba(255,255,255,0.08);
+            padding: 8px 12px;
+            box-shadow: 3px 3px 0px #2B2D42;
         }
         .action-group {
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            width: 100%;
+            justify-content: flex-end;
         }
         .action-btn {
-            padding: 6px 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.04);
-            color:rgba(255,255,255,0.6);
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 8px 16px;
+            border: 2px solid #2B2D42;
+            border-radius: 10px;
+            background: #FAF5E4;
+            color: #2B2D42;
+            font-size: 0.85rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: 2px 2px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
             font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-        .action-btn:hover {
-            background: rgba(255,255,255,0.1);
-            color:rgba(255,255,255,0.9);
-            border-color: rgba(255,255,255,0.2);
         }
         .action-btn:active {
-            transform: scale(0.95);
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #2B2D42;
         }
-        .action-btn.clear-btn:hover {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
-        }
-        .action-btn.undo-btn:hover {
-            border-color: #ffd93d;
-            color: #ffd93d;
-        }
+        .action-btn.undo-btn { background: #FFD166; }
+        .action-btn.clear-btn { background: #FF6B6B; color: #FFFFFF; }
+
         footer {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            padding: 4px 0 8px;
+            padding: 2px 0 8px;
         }
         .footer-btn {
             padding: 8px 18px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 2px solid #2B2D42;
             border-radius: 10px;
-            background: rgba(255,255,255,0.03);
-            color: rgba(255,255,255,0.45);
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor:pointer;
-            transition: all 0.2s;
+            background: #FFFFFF;
+            color: #2B2D42;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
             font-family: inherit;
         }
-        .footer-btn:hover {
-            background: rgba(255,255,255,0.07);
-            color: rgba(255,255,255,0.75);
-            border-color: rgba(255,255,255,0.15);
+        .footer-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #2B2D42;
         }
+
         #confetticanvas {
             position: fixed;
             inset: 0;
@@ -590,92 +513,6 @@
             pointer-events: none;
             z-index: 400;
         }
-        @media (max-width: 480px) {
-            body {padding: 10px;}
-            #app {gap: 8px;}
-            header h1 {font-size: 1.3rem;}
-            header .subtitle {display: none;}
-            .game-info-bar {gap: 5px;} 
-            .stat-card { padding: 8px 4px; min-height: 54px; }
-            .stat-value { font-size: 0.9rem;}
-            .stat-value.target-word { font-size: 1rem; }
-            .timer-ring-svg { width: 34px; height: 36px; }
-            .timer-text {font-size: 1rem;}
-            .guesses-panel { padding: 10px 12px;}
-            .guess-label {width: 60px; font-size: 0.75rem; }
-            .guess-pct { width: 36px; font-size: 0.65rem; } 
-            .toolbar {padding: 8px 10px; flex-wrap: wrap;}
-            .brush-btn { width: 30px; height: 30px;}
-            .action-btn { padding: 5px 8px; font-size: 0.72rem;}
-            .message-overlay .msg-text { font-size: 2rem;}
-            .model-card { padding: 28px 20px;}
-            .model-card h2 {font-size: 1.3rem;}
-            .model-steps li { font-size: 0.85rem; }
-            .canvas-container::after {font-size: 0.6rem; bottom: 8px; }
-            .guess-bar-track { height: 6px; }
-        }
-        @media (max-width: 380px) {
-           .game-info-bar { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px; }
-           .stat-card { padding: 6px 2px; min-height: 46px; }
-           .stat-label {font-size: 0.55rem;}
-           .stat-value { font-size: 0.8rem;}
-           .stat-value.target-word { font-size: 0.85rem;}
-        }
-        .difficulty-bar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 6px 8px;
-        }
-        .difficulty-bar .diff-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: rgba(255,255,255,0.35);
-            margin-right: 2px;
-        }
-        .diff-btn {
-            padding: 4px 14px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.03);
-            color: rgba(255,255,255,0.45);
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-        .diff-btn:hover {
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.75);
-            border-color: rgba(255,255,255,0.2);
-        }
-        .diff-btn:active {
-            transform: scale(0.95);
-        }
-        .diff-btn.active-easy {
-            background: rgba(0,255,136,0.1);
-            border-color: #00ff88;
-            color: #00ff88;
-        }
-        .diff-btn.active-medium {
-            background: rgba(0,212,255,0.1);
-            border-color: #00d4ff;
-            color: #00d4ff;
-        }
-        .diff-btn.active-hard {
-            background: rgba(255,107,157,0.1);
-            border-color: #ff6b9d;
-            color: #ff6b9d;
-        }  
     </style>
 </head>
 <body>
@@ -690,37 +527,37 @@
     
     <div id="howtoplay" class="model-overlay">
         <div class="model-card">
-            <h2><span>How to play</span></h2>
+            <h2>How to Play</h2>
             <ol class="model-steps">
                 <li>
                     <span class="step-icon">🎯</span>
-                    <span>A <strong>target word</strong> appears at the top of the screen - draw it on the canvas!</span>
+                    <span>A <strong>target word</strong> appears at the top - draw it on the canvas!</span>
                 </li>
                 <li>
                     <span class="step-icon">✏️</span>
-                    <span>Use your mouse to draw. You can also adjust the brush size, <strong>Undo</strong>, or <strong>Clear</strong> as needed.</span>
+                    <span>Use your mouse or finger to draw. Use <strong>Undo</strong> or <strong>Clear</strong> as needed.</span>
                 </li>
                 <li>
                     <span class="step-icon">🤖</span>
-                    <span>The AI Model watches you draw and shows its <strong>top 3 guesses</strong> sorted by how likely it is.</span>
+                    <span>The AI Model watches you draw and shows its <strong>top 3 guesses</strong> sorted by probability.</span>
                 </li>
                 <li>
                     <span class="step-icon">✅</span>
-                    <span>Guess correctly before the <strong>30 second timer</strong> runs out.</span>
+                    <span>Guess correctly before the timer runs out.</span>
                 </li>
                 <li>
                     <span class="step-icon">🔥</span>
                     <span>Build a strong streak!</span>
                 </li>
             </ol>
-            <button class="btn-primary" onclick="dismissHowToPlay()">Got it</button>
+            <button class="btn-primary" id="dismissHowToPlayBtn">Got it</button>
         </div>
     </div>
     
-    <div id="correctOverlay" class="message-overlay correct">
+    <div id="correctoverlay" class="message-overlay correct">
         <span class="msg-text">Correct!</span>
     </div>
-    <div id="timeoutOverlay" class="message-overlay timeout">
+    <div id="timeoutoverlay" class="message-overlay timeout">
         <span class="msg-text">Time's up!</span>
     </div>
 
@@ -728,15 +565,16 @@
     
     <div id="app">
         <header>
-            <h1><span>Doodley</span></h1>
-            <p class="subtitle">Draw it. The AI model guesses it</p>
+            <h1>Doodley</h1>
+            <p class="subtitle">Draw it. The AI model guesses it.</p>
             <div class="difficulty-bar">
-                <span class="diff-label">Diff</span>
+                <span class="diff-label">Difficulty</span>
                 <button class="diff-btn" data-difficulty="easy" onclick="setDifficulty('easy')">Easy</button>
                 <button class="diff-btn active-medium" data-difficulty="medium" onclick="setDifficulty('medium')">Normal</button>
                 <button class="diff-btn" data-difficulty="hard" onclick="setDifficulty('hard')">Hard</button>
             </div>
         </header>
+
         <div class="game-info-bar">
             <div class="stat-card timer-card">
                 <svg class="timer-ring-svg" viewBox="0 0 100 100">
@@ -771,7 +609,6 @@
                 </div>
                 <div id="guessesList">
                     <div class="guess-placeholder">
-                        <div class="icon">✏️</div>
                         Start drawing to see guesses...
                     </div>
                 </div>
@@ -779,13 +616,6 @@
         </div>
 
         <div class="toolbar">
-            <div class="brush-group">
-                <span class="group-label">Brush</span>
-                <button class="brush-btn" data-size="22" title="Large (22px)">
-                    <span class="dot" style="width:22px;height:22px;"></span>
-                </button>
-            </div>
-            <div class="tool-divider"></div>
             <div class="action-group">
                 <button class="action-btn undo-btn" id="undoBtn">Undo</button>
                 <button class="action-btn clear-btn" id="clearBtn">Clear</button>
@@ -797,18 +627,18 @@
         </footer>
     </div>
 
-<script> 
-    // Configuration
-    const TIMER_DURATION = 30; // seconds
-    const CLASSIFY_INTERVAL = 400; // ms between classifications
-    const MIN_CONFIDENCE = 0.15; // minimum confidence to accept a guess
-    const CELEBRATION_DELAY = 2000; // ms before next word after correct
-    const TIMEOUT_DELAY = 1500; // ms before next word after timeout
-    const MAX_UNDO = 25; // max undo
-    const CIRCUMFERENCE = 2 * Math.PI * 45; // svg ring circumference
+<script>
+    /* Constans and game conf */
+    const TIMER_DURATION = 30;
+    const CLASSIFY_INTERVAL = 400;
+    const CELEBRATION_DELAY = 2000;
+    const TIMEOUT_DELAY = 1500;
+    const MAX_UNDO = 25; 
+    const CIRCUMFERENCE = 2 * Math.PI * 45;
+    const DEFAULT_BRUSH_SIZE = 22;
 
-    // Word List
-    const WORDS = ['airplane', 'apple', 'backpack', 'banana', 'basketball',
+    const WORDS = [
+      'airplane', 'apple', 'backpack', 'banana', 'basketball',
       'bed', 'bicycle', 'bird', 'book', 'bread',
       'butterfly', 'cactus', 'cake', 'camera', 'candle',
       'car', 'castle', 'cat', 'chair', 'clock',
@@ -843,6 +673,7 @@
       hard:   { label: 'Hard',   timer: 20, minConfidence: 0.25, scoreMultiplier: 3 },
     };
 
+    /* Game default*/
     const state = {
         gameState: 'loading',
         score: 0,
@@ -850,7 +681,7 @@
         timeLeft: TIMER_DURATION,
         difficulty: 'medium',
         targetWord: '',
-        brushSize: 22,
+        brushSize: DEFAULT_BRUSH_SIZE,
         isdrawing: false,
         lastX: 0,
         lastY: 0,
@@ -865,14 +696,15 @@
         lastclassified: [],
     };
 
+    /* DOM caching */
     const canvas = document.getElementById('drawingcanvas');
     const ctx = canvas.getContext('2d');
     const confetticanvas = document.getElementById('confetticanvas');
     const confettiCtx = confetticanvas.getContext('2d');
     const loadingoverlay = document.getElementById('loadingoverlay');
     const howtoplayoverlay = document.getElementById('howtoplay');
-    const correctoverlay = document.getElementById('correctOverlay');
-    const timeoutoverlay = document.getElementById('timeoutOverlay');
+    const correctoverlay = document.getElementById('correctoverlay');
+    const timeoutoverlay = document.getElementById('timeoutoverlay');
     const timerring = document.getElementById('timerRing');
     const timetext = document.getElementById('timerText');
     const targetworddisplay = document.getElementById('targetWord');
@@ -882,16 +714,18 @@
     const undobtn = document.getElementById('undoBtn');
     const clearbtn = document.getElementById('clearBtn');
     const howtoplaybtn = document.getElementById('howtoplayBtn');
+    const dismissHowToPlayBtn = document.getElementById('dismissHowToPlayBtn');
 
     const offscreencanvas = document.createElement('canvas');
     offscreencanvas.width = 28;
     offscreencanvas.height = 28;
     const offscreenctx = offscreencanvas.getContext('2d');
 
+    /* Canvas and drawing */
     function initCanvas() {
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.fillStyle = '#f5f0e8';
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         state.undostack = [];
         savesnapshot();
@@ -934,7 +768,7 @@
 
     function clearCanvas() {
         if (state.gameState === 'celebrating' || state.gameState === 'timeout') return;
-        ctx.fillStyle = '#f5f0e8';
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         state.undostack = [];
         savesnapshot();
@@ -952,7 +786,7 @@
         state.hasdrawn = true;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, state.brushSize / 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#2d2d3d';
+        ctx.fillStyle = '#2B2D42';
         ctx.fill();
     }
 
@@ -963,7 +797,7 @@
         ctx.beginPath();
         ctx.moveTo(state.lastX, state.lastY);
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = '#2d2d3d';
+        ctx.strokeStyle = '#2B2D42';
         ctx.lineWidth = state.brushSize;
         ctx.stroke();
         state.lastX = pos.x;
@@ -975,15 +809,7 @@
         state.isdrawing = false;
     }
 
-    canvas.addEventListener('mousedown', startdrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopdrawing);
-    canvas.addEventListener('mouseout', stopdrawing);
-
-    canvas.addEventListener('touchstart', startdrawing, {passive: false});
-    canvas.addEventListener('touchmove', draw, {passive: false});
-    canvas.addEventListener('touchend', stopdrawing, {passive: false});
-
+    /* game logic and AI model */
     function onModelReady() {
         state.modelready = true;
         state.classifier = classifier; 
@@ -1010,39 +836,34 @@
         state.classifier.classify(offscreencanvas, (err, results) => {
             if (err || !results || results.length === 0) return;
         
-            // 1. Define troublesome false-positive classes
             const noiseClasses = ['rain', 'stitches', 'line', 'diagram', 'fence'];
             const currentTarget = state.targetWord.toLowerCase().trim();
 
-            // 2. Filter out noise labels UNLESS the current target is actually one of those labels
             const filteredResults = results.filter(item => {
                 const label = item.label.toLowerCase().trim();
-                if (label === currentTarget) return true; // Always keep the target word
-                return !noiseClasses.includes(label);     // Filter out false-positive noise
-        });
+                if (label === currentTarget) return true; 
+                return !noiseClasses.includes(label);     
+            });
 
-        // 3. Fallback to raw results if filtering emptied the array completely
             const finalResults = filteredResults.length > 0 ? filteredResults : results;
         
             state.lastclassified = finalResults;
             renderGuesses(finalResults);
         
-        // 4. Check if the top guess matches the target word
             const toplabel = finalResults[0].label.toLowerCase().trim();
             if (
                 state.gameState === 'playing' && 
                 toplabel === currentTarget && 
                 finalResults[0].confidence >= DIFFICULTIES[state.difficulty].minConfidence
-        ) {
+            ) {
                 handleCorrectGuess();
-        }
-    });
-}
+            }
+        });
+    }
 
     function updateGuessesPlaceholder() {
         guesseslist.innerHTML = `
         <div class="guess-placeholder">
-            <div class="icon">✏️</div>
             Start drawing to see guesses...
         </div>`;
     }
@@ -1189,13 +1010,8 @@
         streakdisplay.textContent = state.streak > 0 ? '🔥 ' + state.streak : '🔥 0';
     }
 
-    function showMessage(overlay) {
-        overlay.classList.add('active');
-    }
-
-    function hideMessage(overlay) {
-        overlay.classList.remove('active');
-    }
+    function showMessage(overlay) { overlay.classList.add('active'); }
+    function hideMessage(overlay) { overlay.classList.remove('active'); }
 
     let confettiAnimId = null;
     function createConfetti() {
@@ -1207,7 +1023,7 @@
         const H = window.innerHeight;
         confetticanvas.width = W;
         confetticanvas.height = H;
-        const COLORS = ['#ff6b9d', '#00d4ff', '#ffd93d', '#00ff88', '#a66cff', '#ff6b6b', '#ff9f43'];
+        const COLORS = ['#FF6B6B', '#129A7D', '#FFD166', '#06D6A0', '#2B2D42'];
         const particles = [];
         for (let i = 0; i < 150; i++) {
             particles.push({
@@ -1257,37 +1073,32 @@
         confettiAnimId = requestAnimationFrame(animateConfetti);
     }
 
-    function showHowToPlay() {
-        howtoplayoverlay.classList.add('active');
-    }
-
-    function dismissHowToPlay() {
-        howtoplayoverlay.classList.remove('active');
-        localStorage.setItem('hasSeenHowToPlay', 'true');
-    }
-
     function setDifficulty(diff) {
         if (state.gameState === 'playing') return;
         if (!DIFFICULTIES[diff]) return;
         state.difficulty = diff;
-        document.querySelectorAll('.diff-btn').forEach(btn => {
-            btn.className = 'diff-btn';
-        });
+        document.querySelectorAll('.diff-btn').forEach(btn => btn.className = 'diff-btn');
         document.querySelector(`.diff-btn[data-difficulty="${diff}"]`).classList.add('active-' + diff);
     }
 
-    document.querySelectorAll('.brush-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (state.gameState === 'celebrating' || state.gameState === 'timeout') return;
-        document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.brushSize = parseInt(btn.dataset.size, 10);
-      });
-    });
+
+       /*Binds and initilazation*/
+    canvas.addEventListener('mousedown', startdrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopdrawing);
+    canvas.addEventListener('mouseout', stopdrawing);
+
+    canvas.addEventListener('touchstart', startdrawing, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', stopdrawing, {passive: false});
 
     undobtn.addEventListener('click', undo);
     clearbtn.addEventListener('click', clearCanvas);
-    howtoplaybtn.addEventListener('click', showHowToPlay);
+    howtoplaybtn.addEventListener('click', () => howtoplayoverlay.classList.add('active'));
+    dismissHowToPlayBtn.addEventListener('click', () => {
+        howtoplayoverlay.classList.remove('active');
+        localStorage.setItem('hasSeenHowToPlay', 'true');
+    });
 
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -1300,9 +1111,6 @@
     });
 
     initCanvas();
-    window.dismissHowToPlay = dismissHowToPlay;
-    window.setDifficulty = setDifficulty;
-    console.log('Doodle Guesser initialized. Waiting for model to load...');
 </script>
 </body>
 </html>
