@@ -225,6 +225,45 @@
             padding: 4px 6px;
             box-shadow: 2px 2px 0px #2B2D42;
         }
+        .achievements-panel {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #FAF5E4 100%);
+            border: 2px solid #129A7D;
+            color: #2B2D42;
+            border-radius: 12px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            box-shadow: 2px 2px 0px rgba(43,45,66,0.9);
+            cursor: default;
+            user-select: none;
+        }
+        .achievement-toast {
+            position: fixed;
+            right: 18px;
+            top: 18px;
+            background: #129A7D;
+            color: #FFFFFF;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            box-shadow: 4px 4px 0px rgba(43,45,66,0.9);
+            transform: translateY(-8px);
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 2000;
+        }
+        .achievement-toast.active { opacity: 1; transform: translateY(0); }
         .difficulty-bar .diff-label {
             font-size: 0.65rem;
             font-weight: 800;
@@ -249,6 +288,13 @@
         .diff-btn.active-easy { background: #06D6A0; border-color: #2B2D42; color: #FFFFFF; }
         .diff-btn.active-medium { background: #129A7D; border-color: #2B2D42; color: #FFFFFF; }
         .diff-btn.active-hard { background: #FF6B6B; border-color: #2B2D42; color: #FFFFFF; }
+
+        #achievementsBtn {
+            border-color: #2B2D42;
+            background: #FFFFFF;
+            color: #2B2D42;
+            box-shadow: 2px 2px 0px #2B2D42;
+        }
 
         .game-info-bar {
             display: grid;
@@ -562,6 +608,8 @@
         <span class="msg-text">Time's up!</span>
     </div>
 
+    <div id="achievementToast" class="achievement-toast" aria-hidden="true"></div>
+
     <canvas id="confetticanvas"></canvas>
     
     <div id="app">
@@ -574,7 +622,19 @@
                 <button class="diff-btn active-medium" data-difficulty="medium" onclick="setDifficulty('medium')">Normal</button>
                 <button class="diff-btn" data-difficulty="hard" onclick="setDifficulty('hard')">Hard</button>
             </div>
+            <div id="achievementsPanel" class="achievements-panel" aria-live="polite"></div>
+            <button class="diff-btn" id="achievementsBtn" style="margin-left:8px;" onclick="openAchievements()">Achievements</button>
         </header>
+        
+            <div id="achievementsOverlay" class="model-overlay" aria-hidden="true">
+                <div class="model-card">
+                    <h2>Achievements</h2>
+                    <div id="achievementsListModal" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;margin-bottom:12px;"></div>
+                    <div style="display:flex;gap:8px;justify-content:center;">
+                        <button class="btn-primary" id="closeAchievementsBtn">Close</button>
+                    </div>
+                </div>
+            </div>
 
         <div class="game-info-bar">
             <div class="stat-card timer-card">
@@ -681,6 +741,7 @@
         score: 0,
         streak: 0,
         timeLeft: TIMER_DURATION,
+        achievementsUnlocked: {},
         difficulty: 'medium',
         targetWord: '',
         brushSize: DEFAULT_BRUSH_SIZE,
@@ -716,6 +777,12 @@
     const undobtn = document.getElementById('undoBtn');
     const clearbtn = document.getElementById('clearBtn');
     const skipbtn = document.getElementById('skipBtn');
+    const achievementsPanel = document.getElementById('achievementsPanel');
+    const achievementToast = document.getElementById('achievementToast');
+    const achievementsOverlay = document.getElementById('achievementsOverlay');
+    const achievementsListModal = document.getElementById('achievementsListModal');
+    const achievementsBtn = document.getElementById('achievementsBtn');
+    const closeAchievementsBtn = document.getElementById('closeAchievementsBtn');
     const howtoplaybtn = document.getElementById('howtoplayBtn');
     const dismissHowToPlayBtn = document.getElementById('dismissHowToPlayBtn');
 
@@ -968,6 +1035,8 @@
         stopClassification();
         state.score += DIFFICULTIES[state.difficulty].scoreMultiplier;
         state.streak += 1;
+        // check achievements on increment
+        checkStreakAchievements();
         updateScoreUI();
         showMessage(correctoverlay);
         createConfetti();
@@ -998,8 +1067,6 @@
         // stop timers and classification immediately
         stopGameTimer();
         stopClassification();
-        // reset streak but keep score
-        state.streak = 0;
         updateScoreUI();
         // advance to next word
         nextRound();
@@ -1027,6 +1094,46 @@
 
     function showMessage(overlay) { overlay.classList.add('active'); }
     function hideMessage(overlay) { overlay.classList.remove('active'); }
+
+    function renderAchievementsModal() {
+        if (!achievementsListModal) return;
+        achievementsListModal.innerHTML = '';
+        Object.keys(ACHIEVEMENTS).forEach(id => {
+            const info = ACHIEVEMENTS[id];
+            const unlocked = state.achievementsUnlocked && state.achievementsUnlocked[id];
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.style.alignItems = 'center';
+            row.style.padding = '6px 8px';
+            row.style.border = '1px solid rgba(43,45,66,0.06)';
+            row.style.borderRadius = '8px';
+            const title = document.createElement('div');
+            title.textContent = info.title;
+            const status = document.createElement('div');
+            status.style.fontWeight = '700';
+            if (unlocked) {
+                const d = new Date(unlocked);
+                status.textContent = 'Unlocked • ' + d.toLocaleString();
+                status.style.color = '#06D6A0';
+            } else {
+                status.textContent = 'Locked';
+                status.style.color = '#A0A5AA';
+            }
+            row.appendChild(title);
+            row.appendChild(status);
+            achievementsListModal.appendChild(row);
+        });
+    }
+
+    function openAchievements() {
+        renderAchievementsModal();
+        if (achievementsOverlay) achievementsOverlay.classList.add('active');
+    }
+
+    function closeAchievements() {
+        if (achievementsOverlay) achievementsOverlay.classList.remove('active');
+    }
 
     let confettiAnimId = null;
     function createConfetti() {
@@ -1088,6 +1195,70 @@
         confettiAnimId = requestAnimationFrame(animateConfetti);
     }
 
+    /* Achievements system */
+    const ACHIEVEMENTS = {
+        'streak3': { title: '3-in-a-row' },
+        'streak5': { title: '5-in-a-row' },
+        'streak10': { title: '10-in-a-row' },
+    };
+
+    function loadAchievements() {
+        try {
+            const raw = localStorage.getItem('achievementsUnlocked');
+            state.achievementsUnlocked = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            state.achievementsUnlocked = {};
+        }
+        renderAchievements();
+    }
+
+    function saveAchievements() {
+        try { localStorage.setItem('achievementsUnlocked', JSON.stringify(state.achievementsUnlocked)); } catch (e) {}
+    }
+
+    function renderAchievements() {
+        if (!achievementsPanel) return;
+        achievementsPanel.innerHTML = '';
+        Object.keys(ACHIEVEMENTS).forEach(id => {
+            if (state.achievementsUnlocked && state.achievementsUnlocked[id]) {
+                const div = document.createElement('div');
+                div.className = 'achievement-badge';
+                div.textContent = ACHIEVEMENTS[id].title;
+                achievementsPanel.appendChild(div);
+            }
+        });
+    }
+
+    function unlockAchievement(id) {
+        if (!ACHIEVEMENTS[id]) return;
+        state.achievementsUnlocked = state.achievementsUnlocked || {};
+        if (state.achievementsUnlocked[id]) return; // already unlocked
+        state.achievementsUnlocked[id] = Date.now();
+        saveAchievements();
+        renderAchievements();
+        showAchievementToast(ACHIEVEMENTS[id].title);
+    }
+
+    function showAchievementToast(text) {
+        if (!achievementToast) return;
+        achievementToast.textContent = 'Achievement: ' + text;
+        achievementToast.setAttribute('aria-hidden', 'false');
+        achievementToast.classList.add('active');
+        setTimeout(() => {
+            if (achievementToast) {
+                achievementToast.classList.remove('active');
+                achievementToast.setAttribute('aria-hidden', 'true');
+            }
+        }, 2500);
+    }
+
+    function checkStreakAchievements() {
+        const s = state.streak;
+        if (s >= 3) unlockAchievement('streak3');
+        if (s >= 5) unlockAchievement('streak5');
+        if (s >= 10) unlockAchievement('streak10');
+    }
+
     function setDifficulty(diff) {
         if (state.gameState === 'playing') return;
         if (!DIFFICULTIES[diff]) return;
@@ -1115,6 +1286,8 @@
         howtoplayoverlay.classList.remove('active');
         localStorage.setItem('hasSeenHowToPlay', 'true');
     });
+    if (achievementsBtn) achievementsBtn.addEventListener('click', openAchievements);
+    if (closeAchievementsBtn) closeAchievementsBtn.addEventListener('click', closeAchievements);
 
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -1123,10 +1296,12 @@
         }
         if (e.key === 'Escape') {
             howtoplayoverlay.classList.remove('active');
+            if (achievementsOverlay) achievementsOverlay.classList.remove('active');
         }
     });
 
     initCanvas();
+    loadAchievements();
 </script>
 </body>
 </html>
