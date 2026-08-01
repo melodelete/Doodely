@@ -19,10 +19,10 @@ An drawing game where you sketch a word and model guesses what you're drawing
 - **132 words** from DoodleNet's vocabulary, shuffled each session
 - **Undo / Clear** — undo up to 25 strokes, or clear the canvas entirely
 - **Timer ring** — a circular progress indicator that changes color as time runs out
-- **Score & streak tracking** — your score and current streak 
+- **Score & streak tracking** — your score ,current streak, And Best streak
 - **Difficulty** - There are 3 modes,Easy,Normal, and Hard, Each one decreases the timer and must make the doodle look better (Can only be changed during celebration or Timeout)
 - **Skipping** You can Skip words incase it is too difficult or The AI Cant Guess it
-- **Advancements** There are 3 Achievments for doodeling 3/5/10 times in a row
+- **Advancements** There are 4 Achievments for doodeling 3/5/10 times in a row,And finishing under 10 seconds.
 - **Hotkeys** There is currently only one hotkey which Is S to skip a word
 
 ## Tech Stack

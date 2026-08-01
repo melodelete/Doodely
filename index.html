@@ -1037,6 +1037,7 @@
         state.streak += 1;
         // check achievements on increment
         checkStreakAchievements();
+        checkFastFinishAchievement();
         updateScoreUI();
         showMessage(correctoverlay);
         createConfetti();
@@ -1200,6 +1201,7 @@
         'streak3': { title: '3-in-a-row' },
         'streak5': { title: '5-in-a-row' },
         'streak10': { title: '10-in-a-row' },
+        'fastfinish': { title: 'Finish under 10 seconds' },
     };
 
     function loadAchievements() {
@@ -1257,6 +1259,15 @@
         if (s >= 3) unlockAchievement('streak3');
         if (s >= 5) unlockAchievement('streak5');
         if (s >= 10) unlockAchievement('streak10');
+    }
+
+    function checkFastFinishAchievement() {
+        const diff = DIFFICULTIES[state.difficulty];
+        if (!diff || state.timeLeft <= 0) return;
+        const elapsed = diff.timer - state.timeLeft;
+        if (elapsed <= 10) {
+            unlockAchievement('fastfinish');
+        }
     }
 
     function setDifficulty(diff) {
