@@ -23,6 +23,7 @@ An drawing game where you sketch a word and model guesses what you're drawing
 - **Difficulty** - There are 3 modes,Easy,Normal, and Hard, Each one decreases the timer and must make the doodle look better (Can only be changed during celebration or Timeout)
 - **Skipping** You can Skip words incase it is too difficult or The AI Cant Guess it
 - **Advancements** There are 3 Achievments for doodeling 3/5/10 times in a row
+- **Hotkeys** There is currently only one hotkey which Is S to skip a word
 
 ## Tech Stack
 

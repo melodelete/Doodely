@@ -1294,6 +1294,10 @@
             e.preventDefault();
             undo();
         }
+        if (e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            skipWord();
+        }
         if (e.key === 'Escape') {
             howtoplayoverlay.classList.remove('active');
             if (achievementsOverlay) achievementsOverlay.classList.remove('active');
