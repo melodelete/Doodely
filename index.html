@@ -653,6 +653,10 @@
                 <span class="stat-value score-value" id="scoreDisplay">0</span>
             </div>
             <div class="stat-card">
+                <span class="stat-label">Best Streak</span>
+                <span class="stat-value streak-value" id="bestStreakDisplay">🔥 0</span>
+            </div>
+            <div class="stat-card">
                 <span class="stat-label">Streak</span>
                 <span class="stat-value streak-value" id="streakDisplay">🔥 0</span>
             </div>
@@ -740,6 +744,7 @@
         gameState: 'loading',
         score: 0,
         streak: 0,
+        bestStreak: 0,
         timeLeft: TIMER_DURATION,
         achievementsUnlocked: {},
         difficulty: 'medium',
@@ -777,6 +782,7 @@
     const undobtn = document.getElementById('undoBtn');
     const clearbtn = document.getElementById('clearBtn');
     const skipbtn = document.getElementById('skipBtn');
+    const bestStreakDisplay = document.getElementById('bestStreakDisplay');
     const achievementsPanel = document.getElementById('achievementsPanel');
     const achievementToast = document.getElementById('achievementToast');
     const achievementsOverlay = document.getElementById('achievementsOverlay');
@@ -1035,6 +1041,10 @@
         stopClassification();
         state.score += DIFFICULTIES[state.difficulty].scoreMultiplier;
         state.streak += 1;
+        if (state.streak > state.bestStreak) {
+            state.bestStreak = state.streak;
+            saveBestStreak();
+        }
         // check achievements on increment
         checkStreakAchievements();
         checkFastFinishAchievement();
@@ -1090,6 +1100,7 @@
 
     function updateScoreUI() {
         scoredisplay.textContent = state.score;
+        bestStreakDisplay.textContent = state.bestStreak > 0 ? '🔥 ' + state.bestStreak : '🔥 0';
         streakdisplay.textContent = state.streak > 0 ? '🔥 ' + state.streak : '🔥 0';
     }
 
@@ -1218,6 +1229,19 @@
         try { localStorage.setItem('achievementsUnlocked', JSON.stringify(state.achievementsUnlocked)); } catch (e) {}
     }
 
+    function loadBestStreak() {
+        try {
+            const stored = parseInt(localStorage.getItem('bestStreak'), 10);
+            state.bestStreak = Number.isFinite(stored) ? stored : 0;
+        } catch (e) {
+            state.bestStreak = 0;
+        }
+    }
+
+    function saveBestStreak() {
+        try { localStorage.setItem('bestStreak', String(state.bestStreak)); } catch (e) {}
+    }
+
     function renderAchievements() {
         if (!achievementsPanel) return;
         achievementsPanel.innerHTML = '';
@@ -1317,6 +1341,7 @@
 
     initCanvas();
     loadAchievements();
+    loadBestStreak();
 </script>
 </body>
 </html>
