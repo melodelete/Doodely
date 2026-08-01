@@ -178,6 +178,13 @@
             text-shadow: 4px 4px 0px #2B2D42;
             animation: msgpop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        .message-overlay .msg-subtext {
+            display: block;
+            margin-top: 12px;
+            font-size: 1rem;
+            color: #FFFFFF;
+            opacity: 0.9;
+        }
         .message-overlay.correct .msg-text { color: #06D6A0; }
         .message-overlay.timeout .msg-text { color: #FF6B6B; }
         @keyframes msgpop {
@@ -367,6 +374,41 @@
             font-weight: 900;
             color: #129A7D;
             text-transform: capitalize;
+            cursor: pointer;
+        }
+        .stat-value.target-word:hover { text-decoration: underline; }
+        .word-picker-search {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        .word-picker-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .word-picker-item {
+            padding: 10px 12px;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            background: #F8F6F0;
+            color: #2B2D42;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s ease, background 0.1s ease;
+        }
+        .word-picker-item:hover {
+            transform: translateY(-1px);
+            background: #E8F6F4;
         }
         .stat-value.score-value { color: #06D6A0; }
         .stat-value.streak-value { color: #FF6B6B; }
@@ -608,6 +650,17 @@
         <span class="msg-text">Time's up!</span>
     </div>
 
+    <div id="chooseWordOverlay" class="model-overlay" aria-hidden="true">
+        <div class="model-card">
+            <h2>Choose a word</h2>
+            <input id="wordPickerSearch" class="word-picker-search" placeholder="Search words" aria-label="Search words" />
+            <div id="wordPickerList" class="word-picker-list"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
+                <button class="btn-primary" id="closeWordPickerBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div id="achievementToast" class="achievement-toast" aria-hidden="true"></div>
 
     <canvas id="confetticanvas"></canvas>
@@ -776,6 +829,10 @@
     const timerring = document.getElementById('timerRing');
     const timetext = document.getElementById('timerText');
     const targetworddisplay = document.getElementById('targetWord');
+    const wordPickerSearch = document.getElementById('wordPickerSearch');
+    const wordPickerList = document.getElementById('wordPickerList');
+    const chooseWordOverlay = document.getElementById('chooseWordOverlay');
+    const closeWordPickerBtn = document.getElementById('closeWordPickerBtn');
     const scoredisplay = document.getElementById('scoreDisplay');
     const streakdisplay = document.getElementById('streakDisplay');
     const guesseslist = document.getElementById('guessesList');
@@ -942,6 +999,67 @@
         <div class="guess-placeholder">
             Start drawing to see guesses...
         </div>`;
+    }
+
+    function renderWordPicker(words) {
+        if (!wordPickerList) return;
+        const html = words.map(word => `
+            <div class="word-picker-item" data-word="${word}">${word}</div>
+        `).join('');
+        wordPickerList.innerHTML = html;
+        wordPickerList.querySelectorAll('.word-picker-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const chosen = item.getAttribute('data-word');
+                if (chosen) chooseWord(chosen);
+            });
+        });
+    }
+
+    function filterWordPicker() {
+        if (!wordPickerSearch) return;
+        const query = wordPickerSearch.value.toLowerCase().trim();
+        const filtered = query ? WORDS.filter(word => word.toLowerCase().includes(query)) : WORDS;
+        renderWordPicker(filtered);
+    }
+
+    function openWordPicker() {
+        if (!chooseWordOverlay) return;
+        if (wordPickerSearch) {
+            wordPickerSearch.value = '';
+            filterWordPicker();
+            wordPickerSearch.focus();
+        }
+        chooseWordOverlay.classList.add('active');
+        chooseWordOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeWordPicker() {
+        if (!chooseWordOverlay) return;
+        chooseWordOverlay.classList.remove('active');
+        chooseWordOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function chooseWord(word) {
+        if (!word) return;
+        stopGameTimer();
+        stopClassification();
+        const chosen = word.trim();
+        state.targetWord = chosen;
+        const index = state.shuffledwords.indexOf(chosen);
+        if (index >= 0) {
+            state.wordindex = index + 1;
+        }
+        state.timeLeft = DIFFICULTIES[state.difficulty].timer;
+        state.hasdrawn = false;
+        state.lastclassified = [];
+        state.gameState = 'playing';
+        targetworddisplay.textContent = chosen;
+        updateTimerUI();
+        clearCanvas();
+        updateGuessesPlaceholder();
+        startGameTimer();
+        startClassification();
+        closeWordPicker();
     }
 
     function renderGuesses(results) {
@@ -1316,6 +1434,9 @@
     undobtn.addEventListener('click', undo);
     clearbtn.addEventListener('click', clearCanvas);
     if (skipbtn) skipbtn.addEventListener('click', skipWord);
+    if (targetworddisplay) targetworddisplay.addEventListener('click', openWordPicker);
+    if (closeWordPickerBtn) closeWordPickerBtn.addEventListener('click', closeWordPicker);
+    if (wordPickerSearch) wordPickerSearch.addEventListener('input', filterWordPicker);
     howtoplaybtn.addEventListener('click', () => howtoplayoverlay.classList.add('active'));
     dismissHowToPlayBtn.addEventListener('click', () => {
         howtoplayoverlay.classList.remove('active');
@@ -1336,6 +1457,7 @@
         if (e.key === 'Escape') {
             howtoplayoverlay.classList.remove('active');
             if (achievementsOverlay) achievementsOverlay.classList.remove('active');
+            closeWordPicker();
         }
     });
 
