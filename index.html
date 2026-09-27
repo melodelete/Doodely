@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Doodley</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+
+    <style>
+        *, *::before, *::after { margin: 0 ; padding: 0; box-sizing: border-box;}
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "sans-serif";
+            background-color: #FAF5E4;
+            color: #2B2D42;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 16px;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #loadingoverlay {
+            position: fixed;
+            inset: 0;
+            background: #FAF5E4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #loadingoverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loading-content { text-align: center; }
+        .loading-content h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #FF6B6B;
+            margin-bottom: 20px;
+        }
+        .loader {
+            width: 44px;
+            height: 44px;
+            border: 4px solid #E8E2CE;
+            border-top-color: #129A7D;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-content p {
+            color: #6C757D;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.75s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+
+        .model-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(43, 45, 66, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .model-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .model-card {
+            background: #FFFFFF;
+            border: 3px solid #2B2D42;
+            border-radius: 20px;
+            padding: 32px 28px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 6px 6px 0px #2B2D42;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+        }
+        .model-overlay.active .model-card { transform: translateY(0); }
+        .model-card h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center; 
+            color: #2B2D42;
+        }
+        .model-steps {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .model-steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #2B2D42;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+        .model-steps .step-icon {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: #FAF5E4;
+            border: 2px solid #2B2D42;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+        .model-card .btn-primary {
+            display: block;
+            margin: 0 auto;
+            padding: 12px 36px;
+            background: #129A7D;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+        }
+        .model-card .btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #2B2D42;
+        }
+
+        .message-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-overlay .msg-text {
+            font-size: 3.2rem;
+            font-weight: 900;
+            text-shadow: 4px 4px 0px #2B2D42;
+            animation: msgpop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .message-overlay .msg-subtext {
+            display: block;
+            margin-top: 12px;
+            font-size: 1rem;
+            color: #FFFFFF;
+            opacity: 0.9;
+        }
+        .message-overlay.correct .msg-text { color: #06D6A0; }
+        .message-overlay.timeout .msg-text { color: #FF6B6B; }
+        @keyframes msgpop {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        #app::-webkit-scrollbar { display: none; }
+
+        header { text-align: center; padding: 4px 0; }
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #FF6B6B;
+            letter-spacing: -0.5px;
+        }
+        header .subtitle {
+            font-size: 0.8rem;
+            color: #6C757D;
+            font-weight: 600;
+            margin-top: 1px;
+            margin-bottom: 8px;
+        }
+
+        .difficulty-bar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            padding: 4px 6px;
+            box-shadow: 2px 2px 0px #2B2D42;
+        }
+        .achievements-panel {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #FAF5E4 100%);
+            border: 2px solid #129A7D;
+            color: #2B2D42;
+            border-radius: 12px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            box-shadow: 2px 2px 0px rgba(43,45,66,0.9);
+            cursor: default;
+            user-select: none;
+        }
+        .achievement-toast {
+            position: fixed;
+            right: 18px;
+            top: 18px;
+            background: #129A7D;
+            color: #FFFFFF;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            box-shadow: 4px 4px 0px rgba(43,45,66,0.9);
+            transform: translateY(-8px);
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 2000;
+        }
+        .achievement-toast.active { opacity: 1; transform: translateY(0); }
+        .difficulty-bar .diff-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6C757D;
+            margin-right: 4px;
+            margin-left: 4px;
+        }
+        .diff-btn {
+            padding: 4px 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: #2B2D42;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .diff-btn.active-easy { background: #06D6A0; border-color: #2B2D42; color: #FFFFFF; }
+        .diff-btn.active-medium { background: #129A7D; border-color: #2B2D42; color: #FFFFFF; }
+        .diff-btn.active-hard { background: #FF6B6B; border-color: #2B2D42; color: #FFFFFF; }
+
+        #achievementsBtn {
+            border-color: #2B2D42;
+            background: #FFFFFF;
+            color: #2B2D42;
+            box-shadow: 2px 2px 0px #2B2D42;
+        }
+
+        .game-info-bar {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 0.8fr 0.8fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-card {
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
+            border-radius: 14px;
+            overflow: hidden;
+            background-clip: padding-box;
+            clip-path: inset(0 round 14px);
+            -webkit-clip-path: inset(0 round 14px);
+            padding: 8px 6px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 0px #2B2D42;
+        }
+        .stat-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6C757D;
+            margin-bottom: 2px;
+        }
+        .stat-value { font-size: 1.05rem; font-weight: 800; }
+        .stat-card.timer-card { position: relative; }
+        .timer-ring-svg {
+            width: 42px;
+            height: 42px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .timer-ring-svg .bg {
+            fill: none;
+            stroke: #E8E2CE;
+            stroke-width: 5;
+        }
+        .timer-ring-svg .progress {
+            fill: none;
+            stroke: #129A7D;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 282.75;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+        .timer-ring-svg .progress.warning { stroke: #FFD166; }
+        .timer-ring-svg .progress.danger { stroke: #FF6B6B; }
+        .timer-text {
+            font-size: 1.15rem;
+            font-weight: 900;
+            position: relative;
+            z-index: 1;
+            color: #2B2D42;
+        }
+        .stat-value.target-word {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #129A7D;
+            text-transform: capitalize;
+            cursor: pointer;
+        }
+        .stat-value.target-word:hover { text-decoration: underline; }
+        .word-picker-search {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        .word-picker-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .word-picker-item {
+            padding: 10px 12px;
+            border: 2px solid #2B2D42;
+            border-radius: 12px;
+            background: #F8F6F0;
+            color: #2B2D42;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s ease, background 0.1s ease;
+        }
+        .word-picker-item:hover {
+            transform: translateY(-1px);
+            background: #E8F6F4;
+        }
+        .stat-value.score-value { color: #06D6A0; }
+        .stat-value.streak-value { color: #FF6B6B; }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .canvas-container {
+            position: relative;
+            background: #FFFFFF;
+            border: 3px solid #2B2D42;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 3px 3px 0px #2B2D42;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .canvas-container::after {
+            content: '✏️ Draw here';
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #A0A5AA;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+        #drawingcanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .guesses-panel {
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
+            border-radius: 14px;
+            padding: 12px 14px;
+            box-shadow: 3px 3px 0px #2B2D42;
+        }
+        .guesses-panel .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .guesses-panel .panel-header h3 {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #6C757D;
+        }
+        .guesses-panel .panel-header .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #06D6A0;
+        }
+        .guess-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #E8E2CE;
+        }
+        .guess-row:last-child { border-bottom: none; }
+        .guess-rank {
+            width: 18px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #6C757D;
+            text-align: center;
+        }
+        .guess-label {
+            width: 85px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #2B2D42;
+            text-transform: capitalize;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .guess-bar-track {
+            flex: 1;
+            height: 10px;
+            background: #FAF5E4;
+            border: 1px solid #2B2D42;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .guess-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.35s ease;
+            width: 0%;
+        }
+        .guess-bar-fill.rank-1 { background: #129A7D; }
+        .guess-bar-fill.rank-2 { background: #FF6B6B; }
+        .guess-bar-fill.rank-3 { background: #FFD166; }
+        .guess-pct {
+            width: 38px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #2B2D42;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .guess-placeholder {
+            text-align: center;
+            padding: 14px 0;
+            color: #A0A5AA;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            background: #FFFFFF;
+            border: 2px solid #2B2D42;
+            border-radius: 14px;
+            padding: 8px 12px;
+            box-shadow: 3px 3px 0px #2B2D42;
+        }
+        .action-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            justify-content: flex-end;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            border: 2px solid #2B2D42;
+            border-radius: 10px;
+            background: #FAF5E4;
+            color: #2B2D42;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+        }
+        .action-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #2B2D42;
+        }
+        .action-btn.undo-btn { background: #FFD166; }
+        .action-btn.clear-btn { background: #FF6B6B; color: #FFFFFF; }
+        .action-btn.skip-btn { background: #6C757D; color: #FFFFFF; }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            padding: 2px 0 8px;
+        }
+        .footer-btn {
+            padding: 8px 18px;
+            border: 2px solid #2B2D42;
+            border-radius: 10px;
+            background: #FFFFFF;
+            color: #2B2D42;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #2B2D42;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+        }
+        .footer-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px #2B2D42;
+        }
+
+        #confetticanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 400;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="loadingoverlay"> 
+        <div class="loading-content">
+            <h1>Doodley</h1>
+            <div class="loader"></div>
+            <p>loading AI model <span class="loading-dots"></span></p>
+        </div>
+    </div>
+    
+    <div id="howtoplay" class="model-overlay">
+        <div class="model-card">
+            <h2>How to Play</h2>
+            <ol class="model-steps">
+                <li>
+                    <span class="step-icon">🎯</span>
+                    <span>A <strong>target word</strong> appears at the top - draw it on the canvas!</span>
+                </li>
+                <li>
+                    <span class="step-icon">✏️</span>
+                    <span>Use your mouse or finger to draw. Use <strong>Undo</strong> or <strong>Clear</strong> as needed.</span>
+                </li>
+                <li>
+                    <span class="step-icon">🤖</span>
+                    <span>The AI Model watches you draw and shows its <strong>top 3 guesses</strong> sorted by probability.</span>
+                </li>
+                <li>
+                    <span class="step-icon">✅</span>
+                    <span>Guess correctly before the timer runs out.</span>
+                </li>
+                <li>
+                    <span class="step-icon">🔥</span>
+                    <span>Build a strong streak!</span>
+                </li>
+            </ol>
+            <button class="btn-primary" id="dismissHowToPlayBtn">Got it</button>
+        </div>
+    </div>
+    
+    <div id="correctoverlay" class="message-overlay correct">
+        <span class="msg-text">Correct!</span>
+    </div>
+    <div id="timeoutoverlay" class="message-overlay timeout">
+        <span class="msg-text">Time's up!</span>
+    </div>
+
+    <div id="chooseWordOverlay" class="model-overlay" aria-hidden="true">
+        <div class="model-card">
+            <h2>Choose a word</h2>
+            <input id="wordPickerSearch" class="word-picker-search" placeholder="Search words" aria-label="Search words" />
+            <div id="wordPickerList" class="word-picker-list"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;">
+                <button class="btn-primary" id="closeWordPickerBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="achievementToast" class="achievement-toast" aria-hidden="true"></div>
+
+    <canvas id="confetticanvas"></canvas>
+    
+    <div id="app">
+        <header>
+            <h1>Doodley</h1>
+            <p class="subtitle">Draw it. The AI model guesses it.</p>
+            <div class="difficulty-bar">
+                <span class="diff-label">Difficulty</span>
+                <button class="diff-btn" data-difficulty="easy" onclick="setDifficulty('easy')">Easy</button>
+                <button class="diff-btn active-medium" data-difficulty="medium" onclick="setDifficulty('medium')">Normal</button>
+                <button class="diff-btn" data-difficulty="hard" onclick="setDifficulty('hard')">Hard</button>
+            </div>
+            <div id="achievementsPanel" class="achievements-panel" aria-live="polite"></div>
+            <button class="diff-btn" id="achievementsBtn" style="margin-left:8px;" onclick="openAchievements()">Achievements</button>
+        </header>
+        
+            <div id="achievementsOverlay" class="model-overlay" aria-hidden="true">
+                <div class="model-card">
+                    <h2>Achievements</h2>
+                    <div id="achievementsListModal" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;margin-bottom:12px;"></div>
+                    <div style="display:flex;gap:8px;justify-content:center;">
+                        <button class="btn-primary" id="closeAchievementsBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+
+        <div class="game-info-bar">
+            <div class="stat-card timer-card">
+                <svg class="timer-ring-svg" viewBox="0 0 100 100">
+                    <circle class="bg" cx="50" cy="50" r="45" />
+                    <circle class="progress" id="timerRing" cx="50" cy="50" r="45" />
+                </svg>
+                <span class="timer-text" id="timerText">30</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Draw</span>
+                <span class="stat-value target-word" id="targetWord">-</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Score</span>
+                <span class="stat-value score-value" id="scoreDisplay">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Best Streak</span>
+                <span class="stat-value streak-value" id="bestStreakDisplay">🔥 0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Streak</span>
+                <span class="stat-value streak-value" id="streakDisplay">🔥 0</span>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="canvas-container">
+                <canvas id="drawingcanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <div class="guesses-panel">
+                <div class="panel-header">
+                    <div class="status-dot"></div>
+                    <h3>Top Guesses</h3>
+                </div>
+                <div id="guessesList">
+                    <div class="guess-placeholder">
+                        Start drawing to see guesses...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="action-group">
+                <button class="action-btn undo-btn" id="undoBtn">Undo</button>
+                <button class="action-btn clear-btn" id="clearBtn">Clear</button>
+                <button class="action-btn skip-btn" id="skipBtn">Skip</button>
+            </div>
+        </div>
+
+        <footer>
+            <button class="footer-btn" id="howtoplayBtn">How to play</button>
+        </footer>
+    </div>
+
+<script>
+    // Constans and game conf 
+    const TIMER_DURATION = 30;
+    const CLASSIFY_INTERVAL = 400;
+    const CELEBRATION_DELAY = 2000;
+    const TIMEOUT_DELAY = 1500;
+    const MAX_UNDO = 25; 
+    const CIRCUMFERENCE = 2 * Math.PI * 45;
+    const DEFAULT_BRUSH_SIZE = 22;
+
+    const WORDS = [
+      'airplane', 'apple', 'backpack', 'banana', 'basketball',
+      'bed', 'bicycle', 'bird', 'book', 'bread',
+      'butterfly', 'cactus', 'cake', 'camera', 'candle',
+      'car', 'castle', 'cat', 'chair', 'clock',
+      'cloud', 'cookie', 'couch', 'crab', 'cup',
+      'diamond', 'dog', 'dolphin', 'donut', 'door',
+      'dragon', 'duck', 'envelope', 'eye', 'feather',
+      'fish', 'flashlight', 'flower', 'fork', 'frog',
+      'giraffe', 'guitar', 'hammer', 'hand', 'hat',
+      'headphones', 'heart', 'helicopter', 'horse', 'house',
+      'ice cream', 'key', 'kite', 'knife', 'ladder',
+      'lamp', 'laptop', 'leaf', 'leg', 'light bulb',
+      'lightning', 'lion', 'lobster', 'microphone', 'moon',
+      'mountain', 'mouse', 'mushroom', 'nose', 'octopus',
+      'onion', 'orange', 'oven', 'paintbrush', 'pants',
+      'pencil', 'penguin', 'piano', 'pig', 'pillow',
+      'pineapple', 'pizza', 'potato', 'pumpkin', 'rabbit',
+      'rainbow', 'refrigerator', 'sailboat', 'sandwich', 'scissors',
+      'shark', 'sheep', 'shirt', 'shoe', 'skateboard',
+      'skull', 'snail', 'snake', 'snowflake', 'snowman',
+      'spider', 'spoon', 'squirrel', 'star', 'strawberry',
+      'sun', 'sunglasses', 'sword', 'table', 'teapot',
+      'teddy-bear', 'telephone', 'television', 'tiger', 'toothbrush',
+      'toothpaste', 'tractor', 'train', 'tree', 'triangle',
+      'trombone', 'truck', 'trumpet', 'turtle', 'umbrella',
+      'violin', 'volcano', 'waffle', 'watch', 'watermelon',
+      'windmill', 'wine glass', 'zebra'
+    ];
+
+    const DIFFICULTIES = {
+      easy:   { label: 'Easy',   timer: 45, minConfidence: 0.10, scoreMultiplier: 1 },
+      medium: { label: 'Normal', timer: 30, minConfidence: 0.15, scoreMultiplier: 2 },
+      hard:   { label: 'Hard',   timer: 20, minConfidence: 0.25, scoreMultiplier: 3 },
+    };
+
+    // Game default
+    const state = {
+        gameState: 'loading',
+        score: 0,
+        streak: 0,
+        bestStreak: 0,
+        timeLeft: TIMER_DURATION,
+        achievementsUnlocked: {},
+        difficulty: 'medium',
+        targetWord: '',
+        brushSize: DEFAULT_BRUSH_SIZE,
+        isdrawing: false,
+        lastX: 0,
+        lastY: 0,
+        undostack: [],
+        shuffledwords: [],
+        wordindex: 0,
+        classifier: null,
+        modelready: false,
+        classifytimer: null,
+        gametimer: null,
+        hasdrawn: false,
+        lastclassified: [],
+    };
+
+    // DOM caching 
+    const canvas = document.getElementById('drawingcanvas');
+    const ctx = canvas.getContext('2d');
+    const confetticanvas = document.getElementById('confetticanvas');
+    const confettiCtx = confetticanvas.getContext('2d');
+    const loadingoverlay = document.getElementById('loadingoverlay');
+    const howtoplayoverlay = document.getElementById('howtoplay');
+    const correctoverlay = document.getElementById('correctoverlay');
+    const timeoutoverlay = document.getElementById('timeoutoverlay');
+    const timerring = document.getElementById('timerRing');
+    const timetext = document.getElementById('timerText');
+    const targetworddisplay = document.getElementById('targetWord');
+    const wordPickerSearch = document.getElementById('wordPickerSearch');
+    const wordPickerList = document.getElementById('wordPickerList');
+    const chooseWordOverlay = document.getElementById('chooseWordOverlay');
+    const closeWordPickerBtn = document.getElementById('closeWordPickerBtn');
+    const scoredisplay = document.getElementById('scoreDisplay');
+    const streakdisplay = document.getElementById('streakDisplay');
+    const guesseslist = document.getElementById('guessesList');
+    const undobtn = document.getElementById('undoBtn');
+    const clearbtn = document.getElementById('clearBtn');
+    const skipbtn = document.getElementById('skipBtn');
+    const bestStreakDisplay = document.getElementById('bestStreakDisplay');
+    const achievementsPanel = document.getElementById('achievementsPanel');
+    const achievementToast = document.getElementById('achievementToast');
+    const achievementsOverlay = document.getElementById('achievementsOverlay');
+    const achievementsListModal = document.getElementById('achievementsListModal');
+    const achievementsBtn = document.getElementById('achievementsBtn');
+    const closeAchievementsBtn = document.getElementById('closeAchievementsBtn');
+    const howtoplaybtn = document.getElementById('howtoplayBtn');
+    const dismissHowToPlayBtn = document.getElementById('dismissHowToPlayBtn');
+
+    const offscreencanvas = document.createElement('canvas');
+    offscreencanvas.width = 28;
+    offscreencanvas.height = 28;
+    const offscreenctx = offscreencanvas.getContext('2d');
+
+    // Canvas and drawing
+    function initCanvas() {
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        state.undostack = [];
+        savesnapshot();
+    }
+
+    function getcanvasPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    }
+
+    function savesnapshot() {
+        state.undostack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        if (state.undostack.length > MAX_UNDO) {
+            state.undostack.shift();
+        }
+    }
+
+    function undo() {
+        if (state.gameState === 'celebrating' || state.gameState === 'timeout') return;
+        if (state.undostack.length <= 1) return;
+        state.undostack.pop();
+        ctx.putImageData(state.undostack[state.undostack.length - 1], 0, 0);
+        if (state.undostack.length === 1) {
+            state.hasdrawn = false;
+        }
+    }
+
+    function clearCanvas() {
+        if (state.gameState === 'celebrating' || state.gameState === 'timeout') return;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        state.undostack = [];
+        savesnapshot();
+        state.hasdrawn = false;
+    }
+
+    function startdrawing(e) {
+        if (state.gameState !== 'playing') return;
+        e.preventDefault();
+        const pos = getcanvasPos(e);
+        state.isdrawing = true;
+        state.lastX = pos.x;
+        state.lastY = pos.y;
+        savesnapshot();
+        state.hasdrawn = true;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, state.brushSize / 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#2B2D42';
+        ctx.fill();
+    }
+
+    function draw(e) {
+        if (!state.isdrawing || state.gameState !== 'playing') return;
+        e.preventDefault();
+        const pos = getcanvasPos(e);
+        ctx.beginPath();
+        ctx.moveTo(state.lastX, state.lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = '#2B2D42';
+        ctx.lineWidth = state.brushSize;
+        ctx.stroke();
+        state.lastX = pos.x;
+        state.lastY = pos.y;
+    }
+
+    function stopdrawing(e) {
+        if (e) e.preventDefault();
+        state.isdrawing = false;
+    }
+
+    // game logic and AI model
+    function onModelReady() {
+        state.modelready = true;
+        state.classifier = classifier; 
+        loadingoverlay.classList.add('hidden');
+        if (!localStorage.getItem('hasSeenHowToPlay')) {
+            howtoplayoverlay.classList.add('active');
+        }
+        startGame();
+    }
+
+    const classifier = ml5.imageClassifier('DoodleNet', onModelReady);
+
+    function classifyDrawing() {
+        if (!state.modelready || state.gameState !== 'playing') return;
+        if (!state.hasdrawn) {
+            updateGuessesPlaceholder();
+            return;
+        }
+        offscreenctx.imageSmoothingEnabled = false;
+        offscreenctx.fillStyle = '#ffffff';
+        offscreenctx.fillRect(0, 0, 28, 28);
+        offscreenctx.drawImage(canvas, 0, 0, 28, 28);
+    
+        state.classifier.classify(offscreencanvas, (err, results) => {
+            if (err || !results || results.length === 0) return;
+        
+            const noiseClasses = ['rain', 'stitches', 'line', 'diagram', 'fence'];
+            const currentTarget = state.targetWord.toLowerCase().trim();
+
+            const filteredResults = results.filter(item => {
+                const label = item.label.toLowerCase().trim();
+                if (label === currentTarget) return true; 
+                return !noiseClasses.includes(label);     
+            });
+
+            const finalResults = filteredResults.length > 0 ? filteredResults : results;
+        
+            state.lastclassified = finalResults;
+            renderGuesses(finalResults);
+        
+            const toplabel = finalResults[0].label.toLowerCase().trim();
+            if (
+                state.gameState === 'playing' && 
+                toplabel === currentTarget && 
+                finalResults[0].confidence >= DIFFICULTIES[state.difficulty].minConfidence
+            ) {
+                handleCorrectGuess();
+            }
+        });
+    }
+
+    function updateGuessesPlaceholder() {
+        guesseslist.innerHTML = `
+        <div class="guess-placeholder">
+            Start drawing to see guesses...
+        </div>`;
+    }
+
+    function renderWordPicker(words) {
+        if (!wordPickerList) return;
+        const html = words.map(word => `
+            <div class="word-picker-item" data-word="${word}">${word}</div>
+        `).join('');
+        wordPickerList.innerHTML = html;
+        wordPickerList.querySelectorAll('.word-picker-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const chosen = item.getAttribute('data-word');
+                if (chosen) chooseWord(chosen);
+            });
+        });
+    }
+
+    function filterWordPicker() {
+        if (!wordPickerSearch) return;
+        const query = wordPickerSearch.value.toLowerCase().trim();
+        const filtered = query ? WORDS.filter(word => word.toLowerCase().includes(query)) : WORDS;
+        renderWordPicker(filtered);
+    }
+
+    function openWordPicker() {
+        if (!chooseWordOverlay) return;
+        if (wordPickerSearch) {
+            wordPickerSearch.value = '';
+            filterWordPicker();
+            wordPickerSearch.focus();
+        }
+        chooseWordOverlay.classList.add('active');
+        chooseWordOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeWordPicker() {
+        if (!chooseWordOverlay) return;
+        chooseWordOverlay.classList.remove('active');
+        chooseWordOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function chooseWord(word) {
+        if (!word) return;
+        stopGameTimer();
+        stopClassification();
+        const chosen = word.trim();
+        state.targetWord = chosen;
+        const index = state.shuffledwords.indexOf(chosen);
+        if (index >= 0) {
+            state.wordindex = index + 1;
+        }
+        state.timeLeft = DIFFICULTIES[state.difficulty].timer;
+        state.hasdrawn = false;
+        state.lastclassified = [];
+        state.gameState = 'playing';
+        targetworddisplay.textContent = chosen;
+        updateTimerUI();
+        clearCanvas();
+        updateGuessesPlaceholder();
+        startGameTimer();
+        startClassification();
+        closeWordPicker();
+    }
+
+    function renderGuesses(results) {
+        const top3 = results.slice(0, 3);
+        let html = '';
+        top3.forEach((guess, i) => {
+            const pct = Math.round(guess.confidence * 100);
+            const label = guess.label;
+            html += `
+                <div class="guess-row">
+                    <span class="guess-rank">${i + 1}</span>
+                    <span class="guess-label">${label}</span>
+                    <div class="guess-bar-track">
+                        <div class="guess-bar-fill rank-${i + 1}" style="width: ${pct}%"></div>
+                    </div>
+                    <span class="guess-pct">${pct}%</span>
+                </div>
+            `;
+        });
+        guesseslist.innerHTML = html;
+    }   
+
+    function startGame() {
+        state.score = 0;
+        state.streak = 0;
+        updateScoreUI();
+        shuffleWords();
+        state.wordindex = 0;
+        state.gameState = 'ready';
+        nextRound();
+    }
+
+    function shuffleWords() {
+        state.shuffledwords = [...WORDS];
+        for (let i = state.shuffledwords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [state.shuffledwords[i], state.shuffledwords[j]] = [state.shuffledwords[j], state.shuffledwords[i]];
+        }
+    }
+
+    function nextRound() {
+        if (state.wordindex >= state.shuffledwords.length) {
+            shuffleWords();
+            state.wordindex = 0;
+        }
+        state.targetWord = state.shuffledwords[state.wordindex++];
+        state.timeLeft = DIFFICULTIES[state.difficulty].timer;
+        state.hasdrawn = false;
+        state.lastclassified = [];
+        state.gameState = 'playing';
+        targetworddisplay.textContent = state.targetWord;
+        updateTimerUI();
+        clearCanvas();
+        updateGuessesPlaceholder();
+        startGameTimer();
+        startClassification();
+    }
+
+    function startClassification() {
+        stopClassification();
+        state.classifytimer = setInterval(classifyDrawing, CLASSIFY_INTERVAL);
+        classifyDrawing();
+    }
+
+    function stopClassification() {
+        if (state.classifytimer) {
+            clearInterval(state.classifytimer);
+            state.classifytimer = null;
+        }
+    }
+
+    function startGameTimer() {
+        stopGameTimer();
+        state.gametimer = setInterval(() => {
+            state.timeLeft -= 0.1;
+            if (state.timeLeft <= 0) {
+                state.timeLeft = 0;
+                updateTimerUI();
+                handleTimeout();
+            } else {
+                updateTimerUI();
+            }
+        }, 100);
+    }
+
+    function stopGameTimer() {
+        if (state.gametimer) {
+            clearInterval(state.gametimer);
+            state.gametimer = null;
+        }
+    }
+
+    function handleCorrectGuess() {
+        if (state.gameState !== 'playing') return;
+        state.gameState = 'celebrating';
+        stopGameTimer();
+        stopClassification();
+        state.score += DIFFICULTIES[state.difficulty].scoreMultiplier;
+        state.streak += 1;
+        if (state.streak > state.bestStreak) {
+            state.bestStreak = state.streak;
+            saveBestStreak();
+        }
+        // check achievements on increment
+        checkStreakAchievements();
+        checkFastFinishAchievement();
+        updateScoreUI();
+        showMessage(correctoverlay);
+        createConfetti();
+        setTimeout(() => {
+            hideMessage(correctoverlay);
+            state.gameState = 'playing';
+            nextRound();
+        }, CELEBRATION_DELAY);
+    }
+    
+    function handleTimeout() {
+        if (state.gameState !== 'playing') return;
+        state.gameState = 'timeout';
+        stopGameTimer();
+        stopClassification();
+        state.streak = 0;
+        updateScoreUI();
+        showMessage(timeoutoverlay);
+        setTimeout(() => {
+            hideMessage(timeoutoverlay);
+            state.gameState = 'playing';
+            nextRound();
+        }, TIMEOUT_DELAY);
+    }
+
+    function skipWord() {
+        if (state.gameState !== 'playing') return;
+        // stop timers and classification immediately
+        stopGameTimer();
+        stopClassification();
+        updateScoreUI();
+        // advance to next word
+        nextRound();
+    }
+
+    function updateTimerUI() {
+        const timeLeft = Math.max(0, state.timeLeft);
+        const diff = DIFFICULTIES[state.difficulty];
+        const progress = timeLeft / diff.timer;
+        const offset = CIRCUMFERENCE * (1 - progress);
+        timerring.style.strokeDashoffset = offset;
+        timetext.textContent = Math.ceil(timeLeft);
+        timerring.classList.remove('warning', 'danger');
+        if (timeLeft <= 5) {
+            timerring.classList.add('danger');
+        } else if (timeLeft <= 10) {
+            timerring.classList.add('warning');
+        } 
+    }
+
+    function updateScoreUI() {
+        scoredisplay.textContent = state.score;
+        bestStreakDisplay.textContent = state.bestStreak > 0 ? '🔥 ' + state.bestStreak : '🔥 0';
+        streakdisplay.textContent = state.streak > 0 ? '🔥 ' + state.streak : '🔥 0';
+    }
+
+    function showMessage(overlay) { overlay.classList.add('active'); }
+    function hideMessage(overlay) { overlay.classList.remove('active'); }
+
+    function renderAchievementsModal() {
+        if (!achievementsListModal) return;
+        achievementsListModal.innerHTML = '';
+        Object.keys(ACHIEVEMENTS).forEach(id => {
+            const info = ACHIEVEMENTS[id];
+            const unlocked = state.achievementsUnlocked && state.achievementsUnlocked[id];
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.style.alignItems = 'center';
+            row.style.padding = '6px 8px';
+            row.style.border = '1px solid rgba(43,45,66,0.06)';
+            row.style.borderRadius = '8px';
+            const title = document.createElement('div');
+            title.textContent = info.title;
+            const status = document.createElement('div');
+            status.style.fontWeight = '700';
+            if (unlocked) {
+                const d = new Date(unlocked);
+                status.textContent = 'Unlocked • ' + d.toLocaleString();
+                status.style.color = '#06D6A0';
+            } else {
+                status.textContent = 'Locked';
+                status.style.color = '#A0A5AA';
+            }
+            row.appendChild(title);
+            row.appendChild(status);
+            achievementsListModal.appendChild(row);
+        });
+    }
+
+    function openAchievements() {
+        renderAchievementsModal();
+        if (achievementsOverlay) achievementsOverlay.classList.add('active');
+    }
+
+    function closeAchievements() {
+        if (achievementsOverlay) achievementsOverlay.classList.remove('active');
+    }
+
+    let confettiAnimId = null;
+    function createConfetti() {
+        if (confettiAnimId) {
+            cancelAnimationFrame(confettiAnimId);
+            confettiAnimId = null;
+        }
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+        confetticanvas.width = W;
+        confetticanvas.height = H;
+        const COLORS = ['#FF6B6B', '#129A7D', '#FFD166', '#06D6A0', '#2B2D42'];
+        const particles = [];
+        for (let i = 0; i < 150; i++) {
+            particles.push({
+                x: Math.random() * W,
+                y: Math.random() * H * -1 - 20,
+                w: Math.random() * 10 + 4,
+                h: Math.random() * 6 + 3,
+                color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                rotation: Math.random() * 360,
+                rotspeed: (Math.random() - 0.5) * 12,
+                speedY: Math.random() * 3 + 2,
+                speedX: (Math.random() - 0.5) * 2,
+                oscillation: Math.random() * 2,
+                phase: Math.random() * 2 * Math.PI,
+                opacity: 1,
+            });
+        }
+        
+        let frame = 0;
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, W, H);
+            let allDone = true;
+            particles.forEach(p => {
+                p.y += p.speedY;
+                p.x += p.speedX + Math.sin(frame * 0.03 + p.phase) * p.oscillation;
+                p.rotation += p.rotspeed;
+                p.opacity = Math.max(0, p.opacity - (p.y > H ? 0.05 : 0));
+                if (p.y < H + 50 && p.opacity > 0) {
+                    allDone = false;
+                    confettiCtx.save();
+                    confettiCtx.translate(p.x, p.y);
+                    confettiCtx.rotate(p.rotation * Math.PI / 180);
+                    confettiCtx.fillStyle = p.color;
+                    confettiCtx.globalAlpha = p.opacity;
+                    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    confettiCtx.restore();
+                }
+            });
+            frame++;
+            if (!allDone) {
+                confettiAnimId = requestAnimationFrame(animateConfetti);
+            } else {
+                confettiCtx.clearRect(0, 0, W, H);
+                confettiAnimId = null;
+            }
+        }
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+    }
+
+    // Achievements system
+    const ACHIEVEMENTS = {
+        'streak3': { title: '3-in-a-row' },
+        'streak5': { title: '5-in-a-row' },
+        'streak10': { title: '10-in-a-row' },
+        'fastfinish': { title: 'Finish under 10 seconds' },
+    };
+
+    function loadAchievements() {
+        try {
+            const raw = localStorage.getItem('achievementsUnlocked');
+            state.achievementsUnlocked = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            state.achievementsUnlocked = {};
+        }
+        renderAchievements();
+    }
+
+    function saveAchievements() {
+        try { localStorage.setItem('achievementsUnlocked', JSON.stringify(state.achievementsUnlocked)); } catch (e) {}
+    }
+
+    function loadBestStreak() {
+        try {
+            const stored = parseInt(localStorage.getItem('bestStreak'), 10);
+            state.bestStreak = Number.isFinite(stored) ? stored : 0;
+        } catch (e) {
+            state.bestStreak = 0;
+        }
+    }
+
+    function saveBestStreak() {
+        try { localStorage.setItem('bestStreak', String(state.bestStreak)); } catch (e) {}
+    }
+
+    function renderAchievements() {
+        if (!achievementsPanel) return;
+        achievementsPanel.innerHTML = '';
+        Object.keys(ACHIEVEMENTS).forEach(id => {
+            if (state.achievementsUnlocked && state.achievementsUnlocked[id]) {
+                const div = document.createElement('div');
+                div.className = 'achievement-badge';
+                div.textContent = ACHIEVEMENTS[id].title;
+                achievementsPanel.appendChild(div);
+            }
+        });
+    }
+
+    function unlockAchievement(id) {
+        if (!ACHIEVEMENTS[id]) return;
+        state.achievementsUnlocked = state.achievementsUnlocked || {};
+        if (state.achievementsUnlocked[id]) return; // already unlocked
+        state.achievementsUnlocked[id] = Date.now();
+        saveAchievements();
+        renderAchievements();
+        showAchievementToast(ACHIEVEMENTS[id].title);
+    }
+
+    function showAchievementToast(text) {
+        if (!achievementToast) return;
+        achievementToast.textContent = 'Achievement: ' + text;
+        achievementToast.setAttribute('aria-hidden', 'false');
+        achievementToast.classList.add('active');
+        setTimeout(() => {
+            if (achievementToast) {
+                achievementToast.classList.remove('active');
+                achievementToast.setAttribute('aria-hidden', 'true');
+            }
+        }, 2500);
+    }
+
+    function checkStreakAchievements() {
+        const s = state.streak;
+        if (s >= 3) unlockAchievement('streak3');
+        if (s >= 5) unlockAchievement('streak5');
+        if (s >= 10) unlockAchievement('streak10');
+    }
+
+    function checkFastFinishAchievement() {
+        const diff = DIFFICULTIES[state.difficulty];
+        if (!diff || state.timeLeft <= 0) return;
+        const elapsed = diff.timer - state.timeLeft;
+        if (elapsed <= 10) {
+            unlockAchievement('fastfinish');
+        }
+    }
+
+    function setDifficulty(diff) {
+        if (state.gameState === 'playing') return;
+        if (!DIFFICULTIES[diff]) return;
+        state.difficulty = diff;
+        document.querySelectorAll('.diff-btn').forEach(btn => btn.className = 'diff-btn');
+        document.querySelector(`.diff-btn[data-difficulty="${diff}"]`).classList.add('active-' + diff);
+    }
+
+
+       // Binds and initilazation
+    canvas.addEventListener('mousedown', startdrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopdrawing);
+    canvas.addEventListener('mouseout', stopdrawing);
+
+    canvas.addEventListener('touchstart', startdrawing, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', stopdrawing, {passive: false});
+
+    undobtn.addEventListener('click', undo);
+    clearbtn.addEventListener('click', clearCanvas);
+    if (skipbtn) skipbtn.addEventListener('click', skipWord);
+    if (targetworddisplay) targetworddisplay.addEventListener('click', openWordPicker);
+    if (closeWordPickerBtn) closeWordPickerBtn.addEventListener('click', closeWordPicker);
+    if (wordPickerSearch) wordPickerSearch.addEventListener('input', filterWordPicker);
+    howtoplaybtn.addEventListener('click', () => howtoplayoverlay.classList.add('active'));
+    dismissHowToPlayBtn.addEventListener('click', () => {
+        howtoplayoverlay.classList.remove('active');
+        localStorage.setItem('hasSeenHowToPlay', 'true');
+    });
+    if (achievementsBtn) achievementsBtn.addEventListener('click', openAchievements);
+    if (closeAchievementsBtn) closeAchievementsBtn.addEventListener('click', closeAchievements);
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            e.preventDefault();
+            undo();
+        }
+        if (e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            skipWord();
+        }
+        if (e.key === 'Escape') {
+            howtoplayoverlay.classList.remove('active');
+            if (achievementsOverlay) achievementsOverlay.classList.remove('active');
+            closeWordPicker();
+        }
+    });
+
+    initCanvas();
+    loadAchievements();
+    loadBestStreak();
+</script>
+</body>
+</html>
